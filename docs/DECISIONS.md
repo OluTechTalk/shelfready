@@ -2,6 +2,18 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-09-25 — Neon HTTP driver (`drizzle-orm/neon-http`) for the app
+- Options: Neon HTTP driver; Neon WebSocket driver (`neon-serverless` Pool); plain `pg` over TCP
+- Chose: HTTP driver
+- Why: one stateless HTTPS request per query suits Vercel serverless functions — no connection pool to manage or leak, fast cold starts
+- Trade-offs: no interactive transactions (only batched non-interactive ones). If `npm run sync` needs multi-step transactions, use the WebSocket driver for that script only.
+
+## 2026-09-25 — Secret-creating scripts write to `.env.local`, never stdout
+- Options: print the new secret for manual copy; write it straight into `.env.local`
+- Chose: write to `.env.local` and print only a confirmation (first case: `create-storefront-token.ts`)
+- Why: sessions are recorded; a printed token ends up on video and in terminal history
+- Trade-offs: the script edits a local file; it refuses to run if the key is already set, so it never overwrites a working token
+
 ## 2026-09-25 — Shopify Admin token cached in memory per server instance
 - Options: request a token per call; in-memory cache per instance; shared cache in Upstash Redis
 - Chose: in-memory cache with expiry, refreshed 5 min early; concurrent callers share one in-flight refresh; one retry with a fresh token on 401

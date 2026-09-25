@@ -6,10 +6,10 @@ Detailed scope lives in @docs/SPEC.md. Scoring rules live in @docs/RUBRIC.md (v0
 
 ## Current status
 <!-- /end-session updates this block. Keep it to 5 lines. -->
-- Phase: P0 Setup (not started)
-- Last session: none
-- Next target: Session 01 — repo, Vercel deploy, Shopify dev store + API token, Neon
-- Blockers: none
+- Phase: P0 Setup (done) — live at https://shelfready-ashen.vercel.app/status, all green
+- Last session: 01 — Shopify auth + token cache, Neon/Drizzle tables, /status, Vercel deploy
+- Next target: Episode 02 — generate and seed the messy demo catalog
+- Blockers: none (`bg/rubric-v1` pushed, not merged — merge in Ep 03 after adding `zod`, then lint + typecheck)
 
 ## Stack
 - Next.js (App Router) + TypeScript + Tailwind + shadcn/ui, deployed on Vercel Hobby
@@ -39,6 +39,9 @@ Detailed scope lives in @docs/SPEC.md. Scoring rules live in @docs/RUBRIC.md (v0
 ## Commands
 - `npm run dev` — local app
 - `npm run lint && npm run typecheck` — run before every commit
+- `npm run check:shopify` — smoke test Shopify auth (shop name + product count)
+- `npm run db:generate` / `npm run db:migrate` — create / apply Drizzle migrations
+- `npm run create:storefront-token` — one-off; writes `SHOPIFY_STOREFRONT_TOKEN` into `.env.local`
 - `npm run seed` — push the demo catalog to the Shopify dev store
 - `npm run sync` — pull the catalog into Postgres
 - `npm run eval` — run the shopping task set and write results to `evals/results/`
