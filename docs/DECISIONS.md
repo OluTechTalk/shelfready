@@ -2,6 +2,12 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-09-25 — Shopify Admin token cached in memory per server instance
+- Options: request a token per call; in-memory cache per instance; shared cache in Upstash Redis
+- Chose: in-memory cache with expiry, refreshed 5 min early; concurrent callers share one in-flight refresh; one retry with a fresh token on 401
+- Why: simplest option that respects the ~24h token lifetime and never requests a token per API call. Redis adds a dependency on the hot path for no gain at demo traffic.
+- Trade-offs: each Vercel cold start fetches its own token (a few extra token requests a day). Revisit with Redis if token requests get rate-limited.
+
 ## 2026-09-24 — Default model: Gemini free tier (compare models in P5)
 - Options: Gemini (free tier); Groq-hosted open models (free tier); paid APIs (Claude, OpenAI); open-weight models run locally (Ollama)
 - Chose: Gemini as the default, Groq as the backup, both set in `lib/ai/models.ts`
