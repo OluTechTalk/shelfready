@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "check:shopify": "tsx --env-file=.env.local scripts/check-shopify.ts"
+    "check:shopify": "tsx --env-file=.env.local scripts/check-shopify.ts",
+    "create:storefront-token": "tsx --env-file=.env.local scripts/create-storefront-token.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",
