@@ -4,7 +4,7 @@
 // one metafieldsSet, then option renames, SKUs and alt text.
 
 import { METAFIELD_NAMESPACE } from "../catalog/schema";
-import type { FixChange } from "../fixer/types";
+import type { FixChange, FixKind } from "../fixer/types";
 import { adminGraphQL } from "./admin";
 
 type UserError = { field: string[] | null; message: string };
@@ -13,7 +13,19 @@ function check(op: string, errors: UserError[]) {
   if (errors.length) throw new Error(`${op}: ${errors.map((e) => `${e.field?.join(".") ?? ""} ${e.message}`.trim()).join("; ")}`);
 }
 
-export async function applyProductChanges(productId: string, changes: FixChange[]): Promise<void> {
+/** Change kinds that failed, with Shopify's reason. Steps are independent: one failing doesn't stop the rest. */
+export type ApplyErrors = Partial<Record<FixKind, string>>;
+
+export async function applyProductChanges(productId: string, changes: FixChange[]): Promise<ApplyErrors> {
+  const errors: ApplyErrors = {};
+  const step = async (kinds: FixKind[], fn: () => Promise<void>) => {
+    try {
+      await fn();
+    } catch (err) {
+      for (const k of kinds) errors[k] = err instanceof Error ? err.message.slice(0, 500) : String(err);
+    }
+  };
+
   // Product fields (title, description, type, category, tags) in a single update.
   const product: Record<string, unknown> = {};
   for (const c of changes) {
@@ -25,7 +37,7 @@ export async function applyProductChanges(productId: string, changes: FixChange[
       if (c.tags !== undefined) product.tags = c.tags;
     }
   }
-  if (Object.keys(product).length) {
+  if (Object.keys(product).length) await step(["set_title", "set_description", "set_taxonomy"], async () => {
     const res = await adminGraphQL<{ productUpdate: { userErrors: UserError[] } }>(
       `#graphql
       mutation Update($product: ProductUpdateInput!) {
@@ -34,12 +46,12 @@ export async function applyProductChanges(productId: string, changes: FixChange[
       { product: { id: productId, ...product } },
     );
     check("productUpdate", res.productUpdate.userErrors);
-  }
+  });
 
   const metafields = changes.flatMap((c) =>
     c.kind === "set_metafield" ? [{ ownerId: productId, namespace: METAFIELD_NAMESPACE, key: c.key, type: c.type, value: c.value }] : [],
   );
-  if (metafields.length) {
+  if (metafields.length) await step(["set_metafield"], async () => {
     const res = await adminGraphQL<{ metafieldsSet: { userErrors: UserError[] } }>(
       `#graphql
       mutation Meta($metafields: [MetafieldsSetInput!]!) {
@@ -48,10 +60,10 @@ export async function applyProductChanges(productId: string, changes: FixChange[
       { metafields },
     );
     check("metafieldsSet", res.metafieldsSet.userErrors);
-  }
+  });
 
   const renames = changes.filter((c) => c.kind === "rename_option");
-  if (renames.length) {
+  if (renames.length) await step(["rename_option"], async () => {
     const data = await adminGraphQL<{ product: { options: { id: string; name: string }[] } | null }>(
       `query Options($id: ID!) { product(id: $id) { options { id name } } }`,
       { id: productId },
@@ -68,10 +80,10 @@ export async function applyProductChanges(productId: string, changes: FixChange[
       );
       check("productOptionUpdate", res.productOptionUpdate.userErrors);
     }
-  }
+  });
 
   const skus = changes.flatMap((c) => (c.kind === "set_variant_skus" ? c.variants : []));
-  if (skus.length) {
+  if (skus.length) await step(["set_variant_skus"], async () => {
     const res = await adminGraphQL<{ productVariantsBulkUpdate: { userErrors: UserError[] } }>(
       `#graphql
       mutation Skus($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
@@ -80,10 +92,10 @@ export async function applyProductChanges(productId: string, changes: FixChange[
       { productId, variants: skus.map((v) => ({ id: v.variantId, inventoryItem: { sku: v.sku } })) },
     );
     check("productVariantsBulkUpdate", res.productVariantsBulkUpdate.userErrors);
-  }
+  });
 
   const alts = changes.flatMap((c) => (c.kind === "set_alt_text" ? c.images : []));
-  if (alts.length) {
+  if (alts.length) await step(["set_alt_text"], async () => {
     const res = await adminGraphQL<{ fileUpdate: { userErrors: UserError[] } }>(
       `#graphql
       mutation Alt($files: [FileUpdateInput!]!) {
@@ -92,5 +104,6 @@ export async function applyProductChanges(productId: string, changes: FixChange[
       { files: alts.map((a) => ({ id: a.mediaId, alt: a.alt })) },
     );
     check("fileUpdate", res.fileUpdate.userErrors);
-  }
+  });
+  return errors;
 }

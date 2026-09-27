@@ -51,18 +51,25 @@ export async function applyApprovedForProduct(productId: string): Promise<ApplyR
     return fail("Product changed in Shopify since these fixes were proposed — re-run `npm run propose`");
   }
 
-  const changes = rows.map((r) => r.change).filter((c) => c.kind !== "needs_merchant");
-  try {
-    await applyProductChanges(productId, changes);
-  } catch (err) {
-    // Shopify rejected part of the batch: re-sync so the stored copy matches what landed.
-    await resync(productId);
-    return fail(err instanceof Error ? err.message.slice(0, 500) : String(err));
+  // Each step reports on its own, so one rejected write doesn't hide the ones that landed.
+  const errors = await applyProductChanges(productId, rows.map((r) => r.change).filter((c) => c.kind !== "needs_merchant"));
+  const failedRows = rows.filter((r) => errors[r.change.kind]);
+  const appliedIds = rows.filter((r) => !errors[r.change.kind]).map((r) => r.id);
+  if (appliedIds.length) {
+    await db
+      .update(schema.fixProposals)
+      .set({ status: "applied", appliedAt: sql`now()`, error: null })
+      .where(inArray(schema.fixProposals.id, appliedIds));
   }
-  await db
-    .update(schema.fixProposals)
-    .set({ status: "applied", appliedAt: sql`now()`, error: null })
-    .where(inArray(schema.fixProposals.id, ids));
+  for (const r of failedRows) {
+    await db.update(schema.fixProposals).set({ status: "failed", error: errors[r.change.kind] }).where(eq(schema.fixProposals.id, r.id));
+  }
   await resync(productId);
-  return { productId, handle, applied: ids.length, failed: 0 };
+  return {
+    productId,
+    handle,
+    applied: appliedIds.length,
+    failed: failedRows.length,
+    ...(failedRows.length ? { error: [...new Set(failedRows.map((r) => errors[r.change.kind]))].join("; ") } : {}),
+  };
 }
