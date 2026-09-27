@@ -6,10 +6,10 @@ Detailed scope lives in @docs/SPEC.md. Scoring rules live in @docs/RUBRIC.md (v0
 
 ## Current status
 <!-- /end-session updates this block. Keep it to 5 lines. -->
-- Phase: P0 Setup (done) — live at https://shelfready-ashen.vercel.app/status, all green
-- Last session: 01 — Shopify auth + token cache, Neon/Drizzle tables, /status, Vercel deploy
-- Next target: Episode 02 — generate and seed the messy demo catalog
-- Blockers: none (`bg/rubric-v1` pushed, not merged — merge in Ep 03 after adding `zod`, then lint + typecheck)
+- Phase: P1 Catalog (done) — 150 products (50 messy) in Shopify + Postgres, `npm run verify:catalog` passes
+- Last session: 02 — catalog generator + ground truth, resumable seed, sync, verify (recovered after a laptop freeze)
+- Next target: Episode 03 — Audit (finalize rubric, 7 checks + scoring, store score + worst offenders in UI)
+- Blockers: `GROQ_API_KEY` returns 401 — rotate in `.env.local` and Vercel before any model calls
 
 ## Stack
 - Next.js (App Router) + TypeScript + Tailwind + shadcn/ui, deployed on Vercel Hobby
@@ -42,8 +42,10 @@ Detailed scope lives in @docs/SPEC.md. Scoring rules live in @docs/RUBRIC.md (v0
 - `npm run check:shopify` — smoke test Shopify auth (shop name + product count)
 - `npm run db:generate` / `npm run db:migrate` — create / apply Drizzle migrations
 - `npm run create:storefront-token` — one-off; writes `SHOPIFY_STOREFRONT_TOKEN` into `.env.local`
-- `npm run seed` — push the demo catalog to the Shopify dev store
+- `npm run generate:catalog` — regenerate `fixtures/catalog.json` + `fixtures/ground-truth.json` (deterministic)
+- `npm run seed` — push the demo catalog to the Shopify dev store (idempotent; re-run to resume)
 - `npm run sync` — pull the catalog into Postgres
+- `npm run verify:catalog` — check Shopify/Postgres counts and seeded defects against the ground truth
 - `npm run eval` — run the shopping task set and write results to `evals/results/`
 
 ## Rules

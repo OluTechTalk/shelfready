@@ -2,6 +2,24 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-09-27 — Seed resume state lives in Shopify, not in a local progress file
+- Options: local progress file listing finished handles; query the store and compare a per-product fixture hash stored in a `shelfready_seed.hash` metafield
+- Chose: hash metafield, written in the same `productSet` mutation as the product
+- Why: the Episode 02 laptop freeze showed local state can be lost or stale mid-run. The store itself is the only record that can't disagree with the store; a product either has the current hash or gets re-sent. It also makes the seed idempotent (a full re-run is a no-op) and picks up fixture edits.
+- Trade-offs: one extra metafield per product, in a separate namespace that sync filters out so it never reaches the audit or agents
+
+## 2026-09-27 — "Duplicate variants" seeded as synonym option values
+- Options: exact duplicate option combos; synonym values (`M` / `Medium`, `Black` / `Blk`) that mean the same variant
+- Chose: synonyms
+- Why: Shopify's API rejects exact duplicate combos, so they can't exist in a real store. Synonyms are the form this defect actually takes in merchant catalogs, and they're what an agent trips over.
+- Trade-offs: the audit's variant check has to normalize values to catch them (the detector in `lib/catalog/defects.ts` already does)
+
+## 2026-09-26 — Deterministic catalog generator, no model calls
+- Options: generate products with an LLM; hand-write a fixture; seeded-PRNG generator from templates
+- Chose: seeded generator (`scripts/generate-catalog.ts`) with a checked-in `fixtures/catalog.json` and `fixtures/ground-truth.json`
+- Why: reproducible byte-for-byte, free, and the ground truth is exact because the generator injects each defect itself — the audit and eval are then measured against known answers, not a model's guess
+- Trade-offs: copy is more templated than LLM output; 150 products share a small set of phrase patterns
+
 ## 2026-09-25 — Neon HTTP driver (`drizzle-orm/neon-http`) for the app
 - Options: Neon HTTP driver; Neon WebSocket driver (`neon-serverless` Pool); plain `pg` over TCP
 - Chose: HTTP driver
