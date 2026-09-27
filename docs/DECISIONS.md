@@ -2,6 +2,12 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-09-27 — /status checks model keys live, not just presence
+- Options: check the env var is set; call each provider's free model-list endpoint on every page view
+- Chose: live call (Gemini + Groq `GET /models`, 5 s timeout, key in a header), showing only valid/rejected + HTTP status
+- Why: a presence check stayed green while the revoked Groq key was in place; a live check catches revoked or mistyped keys in both `.env.local` and Vercel
+- Trade-offs: each view of a public page makes two outbound requests (no tokens, no cost). If the page gets traffic, cache the result for a minute or rate-limit it.
+
 ## 2026-09-27 — Band gate: weak checks cap the band
 - Options: keep 80/50 cutoffs as-is; raise cutoffs to 95/75; gate on weak checks; regenerate a messier catalog
 - Chose: gate — any check < 0.5 caps at Partial, two or more make it Not ready (score cutoffs unchanged)

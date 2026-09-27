@@ -6,10 +6,10 @@ Detailed scope lives in @docs/SPEC.md. Scoring rules live in @docs/RUBRIC.md (v0
 
 ## Current status
 <!-- /end-session updates this block. Keep it to 5 lines. -->
-- Phase: P1 Catalog (done) — 150 products (50 messy) in Shopify + Postgres, `npm run verify:catalog` passes
-- Last session: 02 — catalog generator + ground truth, resumable seed, sync, verify (recovered after a laptop freeze)
-- Next target: Episode 03 — Audit (finalize rubric, 7 checks + scoring, store score + worst offenders in UI)
-- Blockers: none (Groq key rotated 2026-09-27; /status now live-checks both model keys)
+- Phase: P2 Audit (done) — baseline run #3: store 94.1, 78% ready / 15% partial / 7% not ready; live at /audit
+- Last session: 03 — rubric v1 + band gate, 7 checks, cached per-product model judgment, `npm run audit`, /audit page
+- Next target: Episode 04 — Fixer + review queue (structured proposals, approve/edit/reject, Admin API write-back, re-audit)
+- Blockers: none (Gemini free tier ~15 RPM — full cold audit ≈ 10 min)
 
 ## Stack
 - Next.js (App Router) + TypeScript + Tailwind + shadcn/ui, deployed on Vercel Hobby
@@ -46,6 +46,8 @@ Detailed scope lives in @docs/SPEC.md. Scoring rules live in @docs/RUBRIC.md (v0
 - `npm run seed` — push the demo catalog to the Shopify dev store (idempotent; re-run to resume)
 - `npm run sync` — pull the catalog into Postgres
 - `npm run verify:catalog` — check Shopify/Postgres counts and seeded defects against the ground truth
+- `npm run test:audit` — rule checks vs the ground truth (no model calls)
+- `npm run audit` — score the synced catalog and store the run (model calls cached by content hash)
 - `npm run eval` — run the shopping task set and write results to `evals/results/`
 
 ## Rules
