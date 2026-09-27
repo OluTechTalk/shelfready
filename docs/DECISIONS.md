@@ -2,6 +2,36 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-09-27 — Anyone can view the review queue; only an admin can change it
+- Options: public approve/reject; admin passcode on write actions; approvals only from the local CLI
+- Chose (Olu): `/review` is read-only for visitors; approve / edit / reject need an admin passcode (`ADMIN_TOKEN`, checked server-side). Until the page ships (Episode 04b), approvals go through `npm run fix`, which needs database credentials.
+- Why: the demo should show the queue to anyone, but a public approve button would let any visitor write to the Shopify store
+- Trade-offs: a shared passcode, not real accounts — fine for a single-operator demo
+
+## 2026-09-27 — Model fixes must be grounded in the product's own data, or they're dropped
+- Options: trust structured model output; require evidence and check it in code
+- Chose: check in code — attribute values need a verbatim quote from the product data and must parse as the metafield type; every title word must already appear in the product data; every number in a drafted description must exist in the product data
+- Why: a confident wrong spec (a wrong waterproof rating, an invented weight) causes returns; a gap only costs a sale. Anything the data doesn't support goes to the merchant as `needs_merchant`.
+- Trade-offs: some reasonable rewrites get dropped (e.g. a title with a synonym not in the data); 15 attribute gaps across 14 products are left for the merchant
+
+## 2026-09-27 — Duplicate variants go to the merchant, never auto-deleted
+- Options: auto-delete the synonym duplicate; merge inventory then delete; flag for the merchant
+- Chose: flag (`needs_merchant`)
+- Why: deleting a variant drops or moves inventory and can break existing orders and links — not a call the fixer should make
+- Trade-offs: products with duplicates keep a variant-structure gap until the merchant acts
+
+## 2026-09-27 — Missing product type/category borrowed from the most similar product in the store
+- Options: model guesses the type; keyword rules; copy from the most similar well-classified product (shared handle words)
+- Chose: nearest well-classified product; its tags are borrowed only when this product's own text contains them
+- Why: uses the merchant's own taxonomy (their product types, their category mapping) instead of inventing one, with no model call
+- Trade-offs: depends on handle naming; a product with no similar sibling gets no taxonomy proposal
+
+## 2026-09-27 — Apply writes independently per change and records each result
+- Options: all-or-nothing batch per product; independent steps with per-change status
+- Chose: independent steps; the batch is still refused up front if the product changed since the proposals were made
+- Why: Shopify has no transaction across mutations, so "all-or-nothing" was a fiction — the first test apply landed 6 of 8 changes but marked all 8 failed. Per-change status keeps the queue truthful.
+- Trade-offs: a product can end up partly fixed; the queue shows exactly which fixes are applied and which failed
+
 ## 2026-09-27 — /status checks model keys live, not just presence
 - Options: check the env var is set; call each provider's free model-list endpoint on every page view
 - Chose: live call (Gemini + Groq `GET /models`, 5 s timeout, key in a header), showing only valid/rejected + HTTP status

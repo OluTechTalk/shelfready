@@ -48,6 +48,9 @@ Detailed scope lives in @docs/SPEC.md. Scoring rules live in @docs/RUBRIC.md (v0
 - `npm run verify:catalog` — check Shopify/Postgres counts and seeded defects against the ground truth
 - `npm run test:audit` — rule checks vs the ground truth (no model calls)
 - `npm run audit` — score the synced catalog and store the run (model calls cached by content hash)
+- `npm run test:fixer` — simulate rule fixes vs the ground truth (no model calls, no writes)
+- `npm run propose` — fill the review queue from the latest audit run (never writes to Shopify)
+- `npm run fix -- list | approve <id…> | reject <id…> | retry <id…> | apply [--dry-run]` — review queue CLI; `apply` writes only approved fixes
 - `npm run eval` — run the shopping task set and write results to `evals/results/`
 
 ## Rules
