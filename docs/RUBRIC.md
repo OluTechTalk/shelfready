@@ -32,25 +32,29 @@ Partial credit: checks 1, 3, 6, 7 score as the fraction satisfied (e.g. 3 of 5 r
 
 ## Required attributes by category
 
-| Category | Required attributes |
+Metafield keys (namespace `shelfready`) match `REQUIRED_ATTRIBUTES` in `lib/audit/rubric.ts`, which is the source of truth.
+
+| Category | Required attributes (metafield key) |
 |---|---|
-| Footwear | size range, width, gender/fit, upper material, waterproof (y/n), use case (trail, hiking, casual) |
-| Apparel (jackets, layers) | size range, gender/fit, material, waterproof/insulation rating, use case |
-| Backpacks | capacity (L), weight, frame type, use case (daypack, multi-day) |
-| Tents | capacity (people), season rating, packed weight, setup type |
-| Sleeping bags | temperature rating, fill type, weight, shape |
-| Accessories | material, size/dimensions, use case |
+| Footwear | size range (`size_range`), width (`width`), gender/fit (`gender_fit`), upper material (`upper_material`), waterproof y/n (`waterproof`), use case — trail, hiking, casual (`use_case`) |
+| Apparel (jackets, layers) | size range (`size_range`), gender/fit (`gender_fit`), material (`material`), waterproof/insulation rating (`weather_rating`), use case (`use_case`) |
+| Backpacks | capacity in L (`capacity_l`), weight (`weight`), frame type (`frame_type`), use case — daypack, multi-day (`use_case`) |
+| Tents | capacity in people (`capacity_people`), season rating (`season_rating`), packed weight (`packed_weight`), setup type (`setup_type`) |
+| Sleeping bags | temperature rating (`temperature_rating`), fill type (`fill_type`), weight (`weight`), shape (`shape`) |
+| Accessories | material (`material`), size/dimensions (`dimensions`), use case (`use_case`) |
 
 ## Standard shopper questions (for check 2)
+
+Wording matches `SHOPPER_QUESTIONS` in `lib/audit/rubric.ts` (the code wins); ids are `<category>.<slug>` there.
 
 | Category | Questions |
 |---|---|
 | Footwear | Is it waterproof? How does it fit (true to size, wide)? What terrain is it for? What is the upper made of? How heavy is it? |
-| Apparel | Is it waterproof/warm enough for X? How does it fit? What's it made of? How do I care for it? What activity is it for? |
-| Backpacks | How many liters? How heavy? Will it fit a laptop / hydration bladder? Is it good for multi-day trips? Is it carry-on size? |
-| Tents | How many people? Which seasons? Packed weight? How hard is setup? Is it freestanding? |
-| Sleeping bags | Temperature rating? Down or synthetic? Packed size/weight? Shape? Good for side sleepers? |
-| Accessories | What's it made of? Size? What's it for? Care? Compatibility? |
+| Apparel | Is it waterproof / warm enough for the conditions? How does it fit? What's it made of? How do I care for it? What activity is it for? |
+| Backpacks | How many liters? How heavy is it? Will it fit a laptop / hydration bladder? Is it good for multi-day trips? Is it carry-on size? |
+| Tents | How many people does it fit? Which seasons is it for? What is the packed weight? How hard is setup? Is it freestanding? |
+| Sleeping bags | What is the temperature rating? Is it down or synthetic? What is the packed size / weight? What shape is it? Is it good for side sleepers? |
+| Accessories | What's it made of? What size is it? What's it for? How do I care for it? What is it compatible with? |
 
 ## LLM check rules
 
