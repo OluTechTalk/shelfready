@@ -15,6 +15,13 @@
       "when": 1790526184307,
       "tag": "0001_tense_meltdown",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790529524499,
+      "tag": "0002_marvelous_hellfire_club",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,5 @@
-import { integer, jsonb, numeric, pgTable, primaryKey, real, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { boolean, integer, jsonb, numeric, pgTable, primaryKey, real, serial, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 
 /** Raw Shopify products, synced by `npm run sync`. `contentHash` drives re-audits. */
 export const products = pgTable("products", {
@@ -65,4 +66,39 @@ export const auditScores = pgTable(
     contentHash: text("content_hash").notNull(),
   },
   (t) => [primaryKey({ columns: [t.runId, t.productId] })],
+);
+
+/**
+ * Fix proposals and their review state. The fixer inserts `pending` (or `needs_merchant`)
+ * rows; only an approved row is ever written to Shopify. `contentHash` is the product
+ * version the proposal was made against — apply refuses if the product changed since.
+ */
+export const fixProposals = pgTable(
+  "fix_proposals",
+  {
+    id: serial("id").primaryKey(),
+    productId: text("product_id").notNull(),
+    handle: text("handle").notNull(),
+    checkId: text("check_id").notNull(),
+    kind: text("kind").notNull(),
+    target: text("target").notNull(),
+    change: jsonb("change").notNull(), // FixChange (possibly edited by the reviewer)
+    before: jsonb("before"),
+    source: text("source").notNull(), // "rule" | "model"
+    evidence: text("evidence"),
+    status: text("status").notNull(), // FixStatus
+    contentHash: text("content_hash").notNull(),
+    auditRunId: integer("audit_run_id").references(() => auditRuns.id, { onDelete: "set null" }),
+    edited: boolean("edited").notNull().default(false), // the reviewer changed `change`
+    error: text("error"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    decidedAt: timestamp("decided_at", { withTimezone: true }),
+    appliedAt: timestamp("applied_at", { withTimezone: true }),
+  },
+  // One open proposal per (product, kind, target): re-running the fixer never duplicates.
+  (t) => [
+    uniqueIndex("fix_proposals_open_uq")
+      .on(t.productId, t.kind, t.target)
+      .where(sql`${t.status} in ('pending', 'approved', 'needs_merchant')`),
+  ],
 );
