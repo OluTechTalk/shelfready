@@ -13,6 +13,7 @@
     "seed": "tsx --env-file=.env.local scripts/seed.ts",
     "sync": "tsx --env-file=.env.local scripts/sync.ts",
     "verify:catalog": "tsx --env-file=.env.local scripts/verify-catalog.ts",
+    "test:audit": "tsx --env-file=.env.local scripts/test-audit-rules.ts",
     "generate:catalog": "tsx scripts/generate-catalog.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs migrate"
