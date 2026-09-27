@@ -42,29 +42,48 @@ type ProductNode = Omit<ShopifyProduct, "variants" | "media" | "metafields"> & {
 // Keep page size × nested connection sizes under Shopify's 1,000-point query cost limit.
 const PAGE_SIZE = 8;
 
+const PRODUCT_FIELDS = `#graphql
+  fragment SyncedProduct on Product {
+    id handle title descriptionHtml vendor productType status tags
+    category { id fullName }
+    options { name position values }
+    variants(first: 60) {
+      nodes {
+        id title sku price compareAtPrice inventoryQuantity
+        inventoryItem { tracked }
+        selectedOptions { name value }
+      }
+    }
+    media(first: 10) {
+      nodes { id alt status ... on MediaImage { image { url } } }
+    }
+    metafields(first: 30) { nodes { namespace key type value } }
+  }
+`;
+
 const PRODUCTS_QUERY = `#graphql
+  ${PRODUCT_FIELDS}
   query Products($first: Int!, $after: String) {
     products(first: $first, after: $after, sortKey: ID) {
       pageInfo { hasNextPage endCursor }
-      nodes {
-        id handle title descriptionHtml vendor productType status tags
-        category { id fullName }
-        options { name position values }
-        variants(first: 60) {
-          nodes {
-            id title sku price compareAtPrice inventoryQuantity
-            inventoryItem { tracked }
-            selectedOptions { name value }
-          }
-        }
-        media(first: 10) {
-          nodes { id alt status ... on MediaImage { image { url } } }
-        }
-        metafields(first: 30) { nodes { namespace key type value } }
-      }
+      nodes { ...SyncedProduct }
     }
   }
 `;
+
+const PRODUCT_QUERY = `#graphql
+  ${PRODUCT_FIELDS}
+  query Product($id: ID!) { product(id: $id) { ...SyncedProduct } }
+`;
+
+function toProduct(n: ProductNode): ShopifyProduct {
+  return {
+    ...n,
+    variants: n.variants.nodes,
+    media: n.media.nodes.map((m) => ({ ...m, image: m.image ?? null })),
+    metafields: n.metafields.nodes.filter((m) => m.namespace !== SEED_NAMESPACE),
+  };
+}
 
 /** Pages through every product in the store. */
 export async function fetchAllProducts(): Promise<ShopifyProduct[]> {
@@ -74,17 +93,16 @@ export async function fetchAllProducts(): Promise<ShopifyProduct[]> {
     const data: {
       products: { pageInfo: { hasNextPage: boolean; endCursor: string | null }; nodes: ProductNode[] };
     } = await adminGraphQL(PRODUCTS_QUERY, { first: PAGE_SIZE, after });
-    for (const n of data.products.nodes) {
-      out.push({
-        ...n,
-        variants: n.variants.nodes,
-        media: n.media.nodes.map((m) => ({ ...m, image: m.image ?? null })),
-        metafields: n.metafields.nodes.filter((m) => m.namespace !== SEED_NAMESPACE),
-      });
-    }
+    out.push(...data.products.nodes.map(toProduct));
     if (!data.products.pageInfo.hasNextPage) return out;
     after = data.products.pageInfo.endCursor;
   }
+}
+
+/** One product in the same shape `npm run sync` stores; null if it no longer exists. */
+export async function fetchProduct(id: string): Promise<ShopifyProduct | null> {
+  const data = await adminGraphQL<{ product: ProductNode | null }>(PRODUCT_QUERY, { id });
+  return data.product ? toProduct(data.product) : null;
 }
 
 /** JSON.stringify with sorted object keys, so equal content always hashes the same. */

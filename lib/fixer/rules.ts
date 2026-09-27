@@ -81,7 +81,8 @@ export function proposeOptionNames(p: ShopifyProduct): FixProposal[] {
 
 // SKUs -----------------------------------------------------------------------------------
 
-const skuPart = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 4) || "X";
+// Three characters per option value, matching the store's existing SKUs ("RL-FW017-7-BLA").
+const skuPart = (value: string) => value.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 3) || "X";
 
 export function proposeSkus(p: ShopifyProduct): FixProposal[] {
   const missing = p.variants.filter((v) => !v.sku?.trim());
