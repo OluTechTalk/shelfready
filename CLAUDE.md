@@ -9,7 +9,7 @@ Detailed scope lives in @docs/SPEC.md. Scoring rules live in @docs/RUBRIC.md (v0
 - Phase: P1 Catalog (done) — 150 products (50 messy) in Shopify + Postgres, `npm run verify:catalog` passes
 - Last session: 02 — catalog generator + ground truth, resumable seed, sync, verify (recovered after a laptop freeze)
 - Next target: Episode 03 — Audit (finalize rubric, 7 checks + scoring, store score + worst offenders in UI)
-- Blockers: new `GROQ_API_KEY` works locally (rotated 2026-09-27) — add it to Vercel env vars and redeploy
+- Blockers: none (Groq key rotated 2026-09-27; /status now live-checks both model keys)
 
 ## Stack
 - Next.js (App Router) + TypeScript + Tailwind + shadcn/ui, deployed on Vercel Hobby
