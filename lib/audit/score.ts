@@ -5,7 +5,7 @@ import { htmlToText } from "../catalog/defects";
 import type { ShopifyProduct } from "../shopify/products";
 import { resolveCategory, type CategorySignal } from "./category";
 import * as checks from "./checks";
-import { BANDS, CHECK_IDS, CHECKS, type BandId, type Category, type CheckId, type ProductAuditLlmResult } from "./rubric";
+import { BAND_GATE_THRESHOLD, BANDS, CHECK_IDS, CHECKS, type BandId, type Category, type CheckId, type ProductAuditLlmResult } from "./rubric";
 
 export type ProductScore = {
   productId: string;
@@ -19,8 +19,13 @@ export type ProductScore = {
   llmJudged: boolean;
 };
 
-export function bandFor(score: number): BandId {
-  return (BANDS.find((b) => score >= b.min) ?? BANDS[BANDS.length - 1]).id;
+/** Band from the score, then capped by the gate: weak checks limit how high a product can rank. */
+export function bandFor(score: number, results: Record<CheckId, checks.CheckOutcome>): BandId {
+  const byScore = (BANDS.find((b) => score >= b.min) ?? BANDS[BANDS.length - 1]).id;
+  const weak = CHECK_IDS.filter((id) => results[id].score < BAND_GATE_THRESHOLD).length;
+  if (weak >= 2) return "not_ready";
+  if (weak === 1 && byScore === "agent_ready") return "partial";
+  return byScore;
 }
 
 /** Returns null when the category can't be worked out (reported as unscored, never guessed). */
@@ -49,7 +54,7 @@ export function scoreProduct(p: ShopifyProduct, llm: ProductAuditLlmResult | nul
     categorySignal: resolved.signal,
     checks: results,
     score,
-    band: bandFor(score),
+    band: bandFor(score, results),
     llmJudged: llm !== null,
   };
 }

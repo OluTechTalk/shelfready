@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { getLatestAuditRun, type AuditRunView } from "@/lib/audit/queries";
-import { BANDS, CHECK_IDS, CHECKS, type BandId } from "@/lib/audit/rubric";
+import { BAND_GATE_THRESHOLD, BANDS, CHECK_IDS, CHECKS, type BandId } from "@/lib/audit/rubric";
 
 export const metadata: Metadata = { title: "Catalog audit · ShelfReady" };
 
@@ -106,6 +106,7 @@ function ProductRow({ p }: { p: AuditRunView["products"][number] }) {
                 {CHECKS[id].label}{" "}
                 <span className="font-normal tabular-nums opacity-60">
                   {(p.checks[id].score * 100).toFixed(0)}% · −{((1 - p.checks[id].score) * CHECKS[id].weight).toFixed(1)} pts
+                  {p.checks[id].score < BAND_GATE_THRESHOLD && " · caps the band"}
                 </span>
               </p>
               <ul className="mt-1 list-disc space-y-0.5 pl-5 opacity-80">

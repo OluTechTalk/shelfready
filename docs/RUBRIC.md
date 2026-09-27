@@ -46,6 +46,8 @@ The audit never uses the fixture's labels. It works out each product's category 
 | 50–79 | Partial | Findable, but agents will guess or skip on specific requests |
 | 0–49 | Not ready | Effectively invisible to agents on anything but its name |
 
+**Band gate (v1):** after banding by score, any check scoring below 0.5 caps the product at Partial, and two or more such checks make it Not ready. A product an agent can't answer a single question about isn't agent-ready, however well it scores elsewhere. (Without the gate, the first full audit put 89% of the seeded catalog in Agent-ready, including products whose whole description is "Adventure awaits!".)
+
 **Store score** = mean product score. Also report % of products in each band — that's the more intuitive number for the case study.
 
 ## Required attributes by category

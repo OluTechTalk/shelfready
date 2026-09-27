@@ -2,6 +2,18 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-09-27 — Band gate: weak checks cap the band
+- Options: keep 80/50 cutoffs as-is; raise cutoffs to 95/75; gate on weak checks; regenerate a messier catalog
+- Chose: gate — any check < 0.5 caps at Partial, two or more make it Not ready (score cutoffs unchanged)
+- Why: the first full audit ranked products correctly (clean 100 vs messy 82 avg) but banded 89% as Agent-ready and 0% Not ready, including products with marketing-only descriptions. The weighted sum lets strong checks hide a fatal gap; the gate encodes the rubric's question ("could an agent confidently match it?") directly. Result: 78% / 15% / 7%.
+- Trade-offs: bands no longer follow from the score alone, so the UI must show which check capped a product. Raising cutoffs gave a similar split but with thresholds picked after seeing the data.
+
+## 2026-09-27 — Default audit model: gemini-3.5-flash-lite, paced to 15 RPM
+- Options: gemini-3.5-flash; gemini-3.5-flash-lite; Groq gpt-oss-120b
+- Chose: flash-lite (Groq as backup), calls spaced 4 s apart with a 30 s backoff on quota errors
+- Why: flash was intermittently overloaded (503s, 17–70 s calls) and 2.5 models are closed to new keys. Flash-lite matched the ground truth on every seeded defect (e.g. title content: clean 13/13 pass, vague 0/13). The first unpaced run hit the per-minute quota after ~100 calls.
+- Trade-offs: a cold full audit takes ~10 min; re-runs are near-instant thanks to the content-hash cache
+
 ## 2026-09-27 — Rubric v1: half credit for attributes stated only in the description
 - Options: metafield or nothing (v0); half credit when the description states the value; full credit either way
 - Chose: 0.5 per attribute found only in prose, judged by the model with a required verbatim quote

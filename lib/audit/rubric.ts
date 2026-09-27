@@ -97,7 +97,13 @@ export type BandId = (typeof BAND_IDS)[number];
 
 export type BandSpec = { id: BandId; label: string; min: number; meaning: string };
 
-// Ordered highest first so the first band with score >= min wins.
+/**
+ * Band gate (v1): a check scoring below this is a hard gap an agent can't work around,
+ * whatever the total. One such check caps the band at Partial; two or more make it Not ready.
+ */
+export const BAND_GATE_THRESHOLD = 0.5;
+
+// Ordered highest first so the first band with score >= min wins (before the gate applies).
 export const BANDS: readonly BandSpec[] = [
   { id: "agent_ready", label: "Agent-ready", min: 80, meaning: "An agent can match and recommend it confidently" },
   { id: "partial", label: "Partial", min: 50, meaning: "Findable, but agents will guess or skip on specific requests" },
