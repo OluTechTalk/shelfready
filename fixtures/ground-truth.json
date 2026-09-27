@@ -1,0 +1,1444 @@
+{
+  "version": 1,
+  "summary": {
+    "products": 150,
+    "messy": 50,
+    "byDefect": {
+      "vague_title": 13,
+      "attributes_in_description_only": 13,
+      "attributes_missing": 13,
+      "inconsistent_option_names": 13,
+      "variant_problems": 13,
+      "bad_alt_text": 13,
+      "marketing_only_description": 13,
+      "missing_taxonomy": 13
+    },
+    "byDefectCount": {
+      "0": 100,
+      "1": 20,
+      "2": 12,
+      "3": 12,
+      "4": 6
+    }
+  },
+  "products": [
+    {
+      "handle": "yarrow-mid-hiking-boot-mens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "yarrow-mid-waterproof-hiking-boot-womens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "boulder-mid-waterproof-hiking-boot-mens",
+      "category": "footwear",
+      "defects": [
+        "inconsistent_option_names"
+      ],
+      "details": {
+        "renamedOptions": [
+          {
+            "from": "Color",
+            "to": "Colour"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "boulder-mid-waterproof-hiking-boot-womens",
+      "category": "footwear",
+      "defects": [
+        "attributes_missing"
+      ],
+      "details": {
+        "attributesMissing": [
+          {
+            "key": "gender_fit",
+            "evidence": "This is the women's version, built on a women's-specific last"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "harrier-mid-waterproof-hiking-boot-mens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "harrier-mid-waterproof-hiking-boot-womens",
+      "category": "footwear",
+      "defects": [
+        "attributes_in_description_only",
+        "bad_alt_text"
+      ],
+      "details": {
+        "attributesInDescriptionOnly": [
+          {
+            "key": "waterproof",
+            "evidence": "A waterproof, breathable membrane keeps feet dry through stream crossings and wet grass"
+          }
+        ],
+        "badAltImages": 1
+      }
+    },
+    {
+      "handle": "equinox-low-waterproof-hiking-shoe-mens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "equinox-low-hiking-shoe-womens",
+      "category": "footwear",
+      "defects": [
+        "vague_title",
+        "variant_problems",
+        "missing_taxonomy"
+      ],
+      "details": {
+        "originalTitle": "Equinox Low Hiking Shoe - Women's",
+        "variantProblem": "duplicate_variant"
+      }
+    },
+    {
+      "handle": "cascade-low-waterproof-hiking-shoe-mens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "cascade-low-waterproof-hiking-shoe-womens",
+      "category": "footwear",
+      "defects": [
+        "marketing_only_description"
+      ],
+      "details": {}
+    },
+    {
+      "handle": "ridgeback-low-hiking-shoe-mens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "ridgeback-low-waterproof-hiking-shoe-womens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "fjord-trail-running-shoe-mens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "fjord-trail-running-shoe-womens",
+      "category": "footwear",
+      "defects": [
+        "vague_title",
+        "attributes_in_description_only",
+        "bad_alt_text",
+        "missing_taxonomy"
+      ],
+      "details": {
+        "originalTitle": "Fjord Trail Running Shoe - Women's",
+        "attributesInDescriptionOnly": [
+          {
+            "key": "gender_fit",
+            "evidence": "This is the women's version, built on a women's-specific last"
+          }
+        ],
+        "badAltImages": 1
+      }
+    },
+    {
+      "handle": "traverse-trail-running-shoe-mens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "traverse-trail-running-shoe-womens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "couloir-trail-running-shoe-mens",
+      "category": "footwear",
+      "defects": [
+        "variant_problems",
+        "marketing_only_description"
+      ],
+      "details": {
+        "variantProblem": "both"
+      }
+    },
+    {
+      "handle": "couloir-trail-running-shoe-womens",
+      "category": "footwear",
+      "defects": [
+        "attributes_missing",
+        "inconsistent_option_names"
+      ],
+      "details": {
+        "attributesMissing": [
+          {
+            "key": "width",
+            "evidence": "It fits true to size in a regular (B) width"
+          }
+        ],
+        "renamedOptions": [
+          {
+            "from": "Size",
+            "to": "size"
+          },
+          {
+            "from": "Color",
+            "to": "colour"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "juniper-waterproof-camp-shoe-mens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "juniper-camp-shoe-womens",
+      "category": "footwear",
+      "defects": [
+        "variant_problems"
+      ],
+      "details": {
+        "variantProblem": "missing_skus"
+      }
+    },
+    {
+      "handle": "shale-camp-shoe-mens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "shale-camp-shoe-womens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "serac-camp-shoe-mens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "serac-camp-shoe-womens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "zephyr-insulated-winter-boot-mens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "zephyr-insulated-winter-boot-womens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "larch-insulated-winter-boot-mens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "larch-insulated-winter-boot-womens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "talus-insulated-winter-boot-mens",
+      "category": "footwear",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "talus-insulated-winter-boot-womens",
+      "category": "footwear",
+      "defects": [
+        "inconsistent_option_names",
+        "variant_problems",
+        "bad_alt_text",
+        "marketing_only_description"
+      ],
+      "details": {
+        "renamedOptions": [
+          {
+            "from": "Size",
+            "to": "Shoe Size"
+          }
+        ],
+        "variantProblem": "both",
+        "badAltImages": 1
+      }
+    },
+    {
+      "handle": "flint-rain-jacket-mens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "flint-rain-jacket-womens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "scree-rain-jacket-mens",
+      "category": "apparel",
+      "defects": [
+        "vague_title",
+        "attributes_in_description_only",
+        "missing_taxonomy"
+      ],
+      "details": {
+        "originalTitle": "Scree Rain Jacket - Men's",
+        "attributesInDescriptionOnly": [
+          {
+            "key": "weather_rating",
+            "evidence": "Weather protection: waterproof to 10,000 mm with 10,000 g/m² breathability"
+          },
+          {
+            "key": "gender_fit",
+            "evidence": "Cut in a men's regular fit with room for a midlayer; it runs true to size"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "scree-rain-jacket-womens",
+      "category": "apparel",
+      "defects": [
+        "missing_taxonomy"
+      ],
+      "details": {}
+    },
+    {
+      "handle": "juniper-rain-jacket-mens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "juniper-rain-jacket-womens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "zephyr-down-jacket-mens",
+      "category": "apparel",
+      "defects": [
+        "attributes_missing",
+        "bad_alt_text"
+      ],
+      "details": {
+        "attributesMissing": [
+          {
+            "key": "weather_rating",
+            "evidence": "Weather protection: insulated with down; warm to about 20°F (-7°C) when active"
+          }
+        ],
+        "badAltImages": 1
+      }
+    },
+    {
+      "handle": "zephyr-down-jacket-womens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "serac-down-jacket-mens",
+      "category": "apparel",
+      "defects": [
+        "marketing_only_description"
+      ],
+      "details": {}
+    },
+    {
+      "handle": "serac-down-jacket-womens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "cedar-down-jacket-mens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "cedar-down-jacket-womens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "talus-fleece-jacket-mens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "talus-fleece-jacket-womens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "canyon-fleece-jacket-mens",
+      "category": "apparel",
+      "defects": [
+        "attributes_missing"
+      ],
+      "details": {
+        "attributesMissing": [
+          {
+            "key": "gender_fit",
+            "evidence": "Cut in a men's regular fit with room for a midlayer; it runs true to size"
+          },
+          {
+            "key": "size_range",
+            "evidence": "Available in sizes XS–XXL"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "canyon-fleece-jacket-womens",
+      "category": "apparel",
+      "defects": [
+        "inconsistent_option_names"
+      ],
+      "details": {
+        "renamedOptions": [
+          {
+            "from": "Size",
+            "to": "Sz"
+          },
+          {
+            "from": "Color",
+            "to": "Color Way"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "cairn-fleece-jacket-mens",
+      "category": "apparel",
+      "defects": [
+        "vague_title",
+        "variant_problems",
+        "bad_alt_text",
+        "marketing_only_description"
+      ],
+      "details": {
+        "originalTitle": "Cairn Fleece Jacket - Men's",
+        "variantProblem": "duplicate_variant",
+        "badAltImages": 2
+      }
+    },
+    {
+      "handle": "cairn-fleece-jacket-womens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "saddle-softshell-jacket-mens",
+      "category": "apparel",
+      "defects": [
+        "attributes_missing"
+      ],
+      "details": {
+        "attributesMissing": [
+          {
+            "key": "gender_fit",
+            "evidence": "Cut in a men's regular fit with room for a midlayer; it runs true to size"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "saddle-softshell-jacket-womens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "mesa-softshell-jacket-mens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "mesa-softshell-jacket-womens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "lupine-softshell-jacket-mens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "lupine-softshell-jacket-womens",
+      "category": "apparel",
+      "defects": [
+        "attributes_in_description_only",
+        "inconsistent_option_names",
+        "missing_taxonomy"
+      ],
+      "details": {
+        "attributesInDescriptionOnly": [
+          {
+            "key": "use_case",
+            "evidence": "Best for climbing and ski touring"
+          },
+          {
+            "key": "weather_rating",
+            "evidence": "Weather protection: water-resistant DWR finish, wind-resistant, not fully waterproof"
+          }
+        ],
+        "renamedOptions": [
+          {
+            "from": "Size",
+            "to": "Sizes"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "solstice-insulated-vest-mens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "solstice-insulated-vest-womens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "headwall-insulated-vest-mens",
+      "category": "apparel",
+      "defects": [
+        "vague_title",
+        "bad_alt_text",
+        "missing_taxonomy"
+      ],
+      "details": {
+        "originalTitle": "Headwall Insulated Vest - Men's",
+        "badAltImages": 3
+      }
+    },
+    {
+      "handle": "headwall-insulated-vest-womens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "drift-insulated-vest-mens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "drift-insulated-vest-womens",
+      "category": "apparel",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "aspen-23l-hiking-daypack",
+      "category": "backpacks",
+      "defects": [
+        "attributes_missing",
+        "inconsistent_option_names",
+        "marketing_only_description"
+      ],
+      "details": {
+        "attributesMissing": [
+          {
+            "key": "frame_type",
+            "evidence": "Frame: frameless design with a removable foam back panel"
+          }
+        ],
+        "renamedOptions": [
+          {
+            "from": "Color",
+            "to": "Color Way"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "drift-28l-hiking-daypack",
+      "category": "backpacks",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "tamarack-23l-hiking-daypack",
+      "category": "backpacks",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "cirrus-25l-hiking-daypack",
+      "category": "backpacks",
+      "defects": [
+        "attributes_in_description_only",
+        "variant_problems"
+      ],
+      "details": {
+        "attributesInDescriptionOnly": [
+          {
+            "key": "weight",
+            "evidence": "It weighs 521 g (1.1 lb) empty"
+          },
+          {
+            "key": "capacity_l",
+            "evidence": "It holds 25 liters"
+          }
+        ],
+        "variantProblem": "missing_skus"
+      }
+    },
+    {
+      "handle": "ember-29l-hiking-daypack",
+      "category": "backpacks",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "pika-21l-hiking-daypack",
+      "category": "backpacks",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "headwall-70l-backpacking-pack",
+      "category": "backpacks",
+      "defects": [
+        "marketing_only_description"
+      ],
+      "details": {}
+    },
+    {
+      "handle": "yarrow-47l-backpacking-pack",
+      "category": "backpacks",
+      "defects": [
+        "attributes_in_description_only",
+        "bad_alt_text"
+      ],
+      "details": {
+        "attributesInDescriptionOnly": [
+          {
+            "key": "capacity_l",
+            "evidence": "It holds 47 liters"
+          },
+          {
+            "key": "weight",
+            "evidence": "It weighs 1619 g (3.6 lb) empty"
+          }
+        ],
+        "badAltImages": 2
+      }
+    },
+    {
+      "handle": "saddle-65l-backpacking-pack",
+      "category": "backpacks",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "lynx-69l-backpacking-pack",
+      "category": "backpacks",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "couloir-70l-backpacking-pack",
+      "category": "backpacks",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "larch-59l-backpacking-pack",
+      "category": "backpacks",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "alder-35l-travel-pack",
+      "category": "backpacks",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "traverse-37l-travel-pack",
+      "category": "backpacks",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "quartz-38l-travel-pack",
+      "category": "backpacks",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "cascade-36l-travel-pack",
+      "category": "backpacks",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "hemlock-38l-travel-pack",
+      "category": "backpacks",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "squall-38l-travel-pack",
+      "category": "backpacks",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "equinox-31l-ultralight-pack",
+      "category": "backpacks",
+      "defects": [
+        "vague_title",
+        "marketing_only_description"
+      ],
+      "details": {
+        "originalTitle": "Equinox 31L Ultralight Pack"
+      }
+    },
+    {
+      "handle": "tarn-36l-ultralight-pack",
+      "category": "backpacks",
+      "defects": [
+        "vague_title",
+        "attributes_in_description_only",
+        "attributes_missing"
+      ],
+      "details": {
+        "originalTitle": "Tarn 36L Ultralight Pack",
+        "attributesInDescriptionOnly": [
+          {
+            "key": "frame_type",
+            "evidence": "Frame: frameless design with a removable sit pad"
+          },
+          {
+            "key": "capacity_l",
+            "evidence": "It holds 36 liters"
+          }
+        ],
+        "attributesMissing": [
+          {
+            "key": "weight",
+            "evidence": "It weighs 498 g (1.1 lb) empty"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "stratus-30l-ultralight-pack",
+      "category": "backpacks",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "spruce-31l-ultralight-pack",
+      "category": "backpacks",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "cedar-38l-ultralight-pack",
+      "category": "backpacks",
+      "defects": [
+        "attributes_in_description_only"
+      ],
+      "details": {
+        "attributesInDescriptionOnly": [
+          {
+            "key": "frame_type",
+            "evidence": "Frame: frameless design with a removable sit pad"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "harrier-30l-ultralight-pack",
+      "category": "backpacks",
+      "defects": [
+        "attributes_missing",
+        "inconsistent_option_names",
+        "missing_taxonomy"
+      ],
+      "details": {
+        "attributesMissing": [
+          {
+            "key": "frame_type",
+            "evidence": "Frame: frameless design with a removable sit pad"
+          },
+          {
+            "key": "weight",
+            "evidence": "It weighs 506 g (1.1 lb) empty"
+          }
+        ],
+        "renamedOptions": [
+          {
+            "from": "Color",
+            "to": "Color Way"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "tamarack-1-person-ultralight-tent",
+      "category": "tents",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "shale-1-person-ultralight-tent",
+      "category": "tents",
+      "defects": [
+        "inconsistent_option_names",
+        "variant_problems",
+        "missing_taxonomy"
+      ],
+      "details": {
+        "renamedOptions": [
+          {
+            "from": "Color",
+            "to": "Color Way"
+          }
+        ],
+        "variantProblem": "missing_skus"
+      }
+    },
+    {
+      "handle": "squall-1-person-ultralight-tent",
+      "category": "tents",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "hemlock-2-person-backpacking-tent",
+      "category": "tents",
+      "defects": [
+        "attributes_missing"
+      ],
+      "details": {
+        "attributesMissing": [
+          {
+            "key": "setup_type",
+            "evidence": "Setup: semi-freestanding with a single hubbed pole; one person can pitch it in about 5 minutes"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "quartz-2-person-backpacking-tent",
+      "category": "tents",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "tundra-2-person-backpacking-tent",
+      "category": "tents",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "drift-3-person-backpacking-tent",
+      "category": "tents",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "yarrow-3-person-backpacking-tent",
+      "category": "tents",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "basalt-3-person-backpacking-tent",
+      "category": "tents",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "spruce-4-person-camping-tent",
+      "category": "tents",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "talus-4-person-camping-tent",
+      "category": "tents",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "cedar-4-person-camping-tent",
+      "category": "tents",
+      "defects": [
+        "inconsistent_option_names",
+        "variant_problems",
+        "bad_alt_text",
+        "missing_taxonomy"
+      ],
+      "details": {
+        "renamedOptions": [
+          {
+            "from": "Color",
+            "to": "clr"
+          }
+        ],
+        "variantProblem": "missing_skus",
+        "badAltImages": 1
+      }
+    },
+    {
+      "handle": "boulder-6-person-family-camping-tent",
+      "category": "tents",
+      "defects": [
+        "vague_title",
+        "bad_alt_text"
+      ],
+      "details": {
+        "originalTitle": "Boulder 6-Person Family Camping Tent",
+        "badAltImages": 2
+      }
+    },
+    {
+      "handle": "lupine-6-person-family-camping-tent",
+      "category": "tents",
+      "defects": [
+        "marketing_only_description"
+      ],
+      "details": {}
+    },
+    {
+      "handle": "marten-6-person-family-camping-tent",
+      "category": "tents",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "nimbus-2-person-mountaineering-tent",
+      "category": "tents",
+      "defects": [
+        "attributes_in_description_only",
+        "variant_problems"
+      ],
+      "details": {
+        "attributesInDescriptionOnly": [
+          {
+            "key": "capacity_people",
+            "evidence": "It sleeps 2 people"
+          }
+        ],
+        "variantProblem": "missing_skus"
+      }
+    },
+    {
+      "handle": "zephyr-2-person-mountaineering-tent",
+      "category": "tents",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "scree-2-person-mountaineering-tent",
+      "category": "tents",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "tundra-20f-down-sleeping-bag",
+      "category": "sleeping_bags",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "alder-20f-down-sleeping-bag",
+      "category": "sleeping_bags",
+      "defects": [
+        "inconsistent_option_names"
+      ],
+      "details": {
+        "renamedOptions": [
+          {
+            "from": "Size",
+            "to": "Sz"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "flint-20f-down-sleeping-bag",
+      "category": "sleeping_bags",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "stratus-0f-down-sleeping-bag",
+      "category": "sleeping_bags",
+      "defects": [
+        "attributes_in_description_only",
+        "missing_taxonomy"
+      ],
+      "details": {
+        "attributesInDescriptionOnly": [
+          {
+            "key": "temperature_rating",
+            "evidence": "Temperature rating: 0°F (-18°C) lower limit, comfortable to about 10°F (-12°C)"
+          },
+          {
+            "key": "fill_type",
+            "evidence": "Insulated with 800-fill-power RDS-certified goose down"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "equinox-0f-down-sleeping-bag",
+      "category": "sleeping_bags",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "harrier-0f-down-sleeping-bag",
+      "category": "sleeping_bags",
+      "defects": [
+        "bad_alt_text",
+        "marketing_only_description"
+      ],
+      "details": {
+        "badAltImages": 1
+      }
+    },
+    {
+      "handle": "pika-30f-synthetic-sleeping-bag",
+      "category": "sleeping_bags",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "aspen-30f-synthetic-sleeping-bag",
+      "category": "sleeping_bags",
+      "defects": [
+        "vague_title"
+      ],
+      "details": {
+        "originalTitle": "Aspen 30°F Synthetic Sleeping Bag"
+      }
+    },
+    {
+      "handle": "lynx-30f-synthetic-sleeping-bag",
+      "category": "sleeping_bags",
+      "defects": [
+        "vague_title",
+        "attributes_in_description_only",
+        "attributes_missing",
+        "variant_problems"
+      ],
+      "details": {
+        "originalTitle": "Lynx 30°F Synthetic Sleeping Bag",
+        "attributesInDescriptionOnly": [
+          {
+            "key": "temperature_rating",
+            "evidence": "Temperature rating: 30°F (-1°C) lower limit, comfortable to about 40°F (4°C)"
+          }
+        ],
+        "attributesMissing": [
+          {
+            "key": "weight",
+            "evidence": "It weighs 1270 g (2.8 lb) in the regular length"
+          },
+          {
+            "key": "shape",
+            "evidence": "It has a mummy shape with a roomy footbox"
+          }
+        ],
+        "variantProblem": "missing_skus"
+      }
+    },
+    {
+      "handle": "nimbus-40f-synthetic-sleeping-bag",
+      "category": "sleeping_bags",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "solstice-40f-synthetic-sleeping-bag",
+      "category": "sleeping_bags",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "quartz-40f-synthetic-sleeping-bag",
+      "category": "sleeping_bags",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "cirrus-30f-down-sleeping-quilt",
+      "category": "sleeping_bags",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "zephyr-30f-down-sleeping-quilt",
+      "category": "sleeping_bags",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "granite-30f-down-sleeping-quilt",
+      "category": "sleeping_bags",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "ember-40f-synthetic-sleeping-bag",
+      "category": "sleeping_bags",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "kestrel-40f-synthetic-sleeping-bag",
+      "category": "sleeping_bags",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "scree-40f-synthetic-sleeping-bag",
+      "category": "sleeping_bags",
+      "defects": [
+        "variant_problems",
+        "bad_alt_text",
+        "marketing_only_description",
+        "missing_taxonomy"
+      ],
+      "details": {
+        "variantProblem": "missing_skus",
+        "badAltImages": 2
+      }
+    },
+    {
+      "handle": "traverse-400-lumen-rechargeable-headlamp",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "sage-400-lumen-rechargeable-headlamp",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "spruce-400-lumen-rechargeable-headlamp",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "saddle-400-lumen-rechargeable-headlamp",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "canyon-400-lumen-rechargeable-headlamp",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "squall-carbon-trekking-poles",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "ember-carbon-trekking-poles",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "zephyr-carbon-trekking-poles",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "cascade-carbon-trekking-poles",
+      "category": "accessories",
+      "defects": [
+        "vague_title",
+        "attributes_missing",
+        "variant_problems"
+      ],
+      "details": {
+        "originalTitle": "Cascade Carbon Trekking Poles",
+        "attributesMissing": [
+          {
+            "key": "material",
+            "evidence": "Material: carbon fiber shafts with cork grips and tungsten tips"
+          }
+        ],
+        "variantProblem": "missing_skus"
+      }
+    },
+    {
+      "handle": "larch-carbon-trekking-poles",
+      "category": "accessories",
+      "defects": [
+        "attributes_missing"
+      ],
+      "details": {
+        "attributesMissing": [
+          {
+            "key": "material",
+            "evidence": "Material: carbon fiber shafts with cork grips and tungsten tips"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "cedar-insulated-water-bottle",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "tarn-insulated-water-bottle",
+      "category": "accessories",
+      "defects": [
+        "attributes_in_description_only",
+        "inconsistent_option_names",
+        "missing_taxonomy"
+      ],
+      "details": {
+        "attributesInDescriptionOnly": [
+          {
+            "key": "material",
+            "evidence": "Material: 18/8 stainless steel, double-wall vacuum insulated"
+          }
+        ],
+        "renamedOptions": [
+          {
+            "from": "Color",
+            "to": "colour"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "lynx-insulated-water-bottle",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "moraine-insulated-water-bottle",
+      "category": "accessories",
+      "defects": [
+        "marketing_only_description"
+      ],
+      "details": {}
+    },
+    {
+      "handle": "serac-insulated-water-bottle",
+      "category": "accessories",
+      "defects": [
+        "inconsistent_option_names"
+      ],
+      "details": {
+        "renamedOptions": [
+          {
+            "from": "Color",
+            "to": "clr"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "cornice-merino-wool-beanie",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "flint-merino-wool-beanie",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "talus-merino-wool-beanie",
+      "category": "accessories",
+      "defects": [
+        "vague_title",
+        "attributes_in_description_only",
+        "attributes_missing"
+      ],
+      "details": {
+        "originalTitle": "Talus Merino Wool Beanie",
+        "attributesInDescriptionOnly": [
+          {
+            "key": "material",
+            "evidence": "Material: 100% merino wool rib knit"
+          },
+          {
+            "key": "use_case",
+            "evidence": "Made for cold-weather hiking and everyday wear"
+          }
+        ],
+        "attributesMissing": [
+          {
+            "key": "dimensions",
+            "evidence": "Size: one size, fits 54–60 cm heads"
+          }
+        ]
+      }
+    },
+    {
+      "handle": "headwall-merino-wool-beanie",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "equinox-merino-wool-beanie",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "harrier-merino-hiking-socks",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "shale-merino-hiking-socks",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "quartz-merino-hiking-socks",
+      "category": "accessories",
+      "defects": [
+        "variant_problems"
+      ],
+      "details": {
+        "variantProblem": "missing_skus"
+      }
+    },
+    {
+      "handle": "cairn-merino-hiking-socks",
+      "category": "accessories",
+      "defects": [
+        "vague_title",
+        "bad_alt_text"
+      ],
+      "details": {
+        "originalTitle": "Cairn Merino Hiking Socks",
+        "badAltImages": 1
+      }
+    },
+    {
+      "handle": "drift-merino-hiking-socks",
+      "category": "accessories",
+      "defects": [
+        "marketing_only_description"
+      ],
+      "details": {}
+    },
+    {
+      "handle": "yarrow-hard-anodized-cook-set",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "fjord-hard-anodized-cook-set",
+      "category": "accessories",
+      "defects": [
+        "inconsistent_option_names",
+        "bad_alt_text",
+        "missing_taxonomy"
+      ],
+      "details": {
+        "renamedOptions": [
+          {
+            "from": "Color",
+            "to": "clr"
+          }
+        ],
+        "badAltImages": 1
+      }
+    },
+    {
+      "handle": "tamarack-hard-anodized-cook-set",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "marten-hard-anodized-cook-set",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    },
+    {
+      "handle": "tundra-hard-anodized-cook-set",
+      "category": "accessories",
+      "defects": [],
+      "details": {}
+    }
+  ]
+}

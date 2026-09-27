@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "check:shopify": "tsx --env-file=.env.local scripts/check-shopify.ts",
     "create:storefront-token": "tsx --env-file=.env.local scripts/create-storefront-token.ts",
+    "generate:catalog": "tsx scripts/generate-catalog.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs migrate"
   },
