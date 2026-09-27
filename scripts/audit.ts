@@ -9,6 +9,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { gte } from "drizzle-orm";
 import { MODELS } from "../lib/ai/models";
+import { backOffForQuota, isQuotaError, paceModelCall, pool } from "../lib/ai/pace";
 import { judgeProduct } from "../lib/audit/judge";
 import { BANDS, CHECK_IDS, CHECKS, RUBRIC_VERSION, type CheckId } from "../lib/audit/rubric";
 import { scoreProduct, summarizeStore, type ProductScore } from "../lib/audit/score";
@@ -18,20 +19,6 @@ import type { ShopifyProduct } from "../lib/shopify/products";
 
 const CONCURRENCY = 4;
 const ATTEMPTS = 3; // on top of the AI SDK's own retries
-// Free-tier Gemini allows ~15 requests/minute: start model calls at least this far apart.
-const MIN_CALL_GAP_MS = 4_000;
-const QUOTA_BACKOFF_MS = 30_000;
-
-let nextCallAt = 0;
-/** Reserves the next call slot; concurrent workers queue up behind each other. */
-async function paceModelCall() {
-  const now = Date.now();
-  const at = Math.max(now, nextCallAt);
-  nextCallAt = at + MIN_CALL_GAP_MS;
-  if (at > now) await new Promise((r) => setTimeout(r, at - now));
-}
-
-const isQuotaError = (err: unknown) => err instanceof Error && /quota|rate.?limit|429|high demand/i.test(err.message);
 
 // Which check each seeded defect should pull down (for the ground-truth report).
 const DEFECT_CHECK: Record<DefectId, CheckId> = {
@@ -44,13 +31,6 @@ const DEFECT_CHECK: Record<DefectId, CheckId> = {
   marketing_only_description: "description_answerability",
   missing_taxonomy: "taxonomy",
 };
-
-async function pool<T>(items: T[], n: number, fn: (item: T) => Promise<void>) {
-  let next = 0;
-  await Promise.all(Array.from({ length: n }, async () => {
-    while (next < items.length) await fn(items[next++]);
-  }));
-}
 
 const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : NaN);
 const fmt = (x: number, d = 1) => (Number.isNaN(x) ? "—" : x.toFixed(d));
@@ -113,8 +93,7 @@ async function main() {
       } catch (err) {
         if (attempt === ATTEMPTS) unscored.push(`${p.handle}: ${err instanceof Error ? err.message.slice(0, 120) : String(err)}`);
         else if (isQuotaError(err)) {
-          // Push every worker's next slot back so the per-minute window can reset.
-          nextCallAt = Math.max(nextCallAt, Date.now() + QUOTA_BACKOFF_MS);
+          backOffForQuota();
         }
       }
     }
