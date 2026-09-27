@@ -132,11 +132,13 @@ export function titleFormatProblems(title: string): string[] {
 export function titleSpecificity(p: ShopifyProduct, llm: ProductAuditLlmResult | null): CheckOutcome {
   const findings = titleFormatProblems(p.title);
   const formatOk = findings.length === 0;
-  const contentOk = !!llm && llm.title.namesProductType && llm.title.hasDistinguishingAttribute;
+  const namesType = !!llm && quoteAppearsIn(llm.title.productTypeWords, p.title);
+  const distinguishes = !!llm && llm.title.distinguishingWords.some((w) => quoteAppearsIn(w, p.title));
+  const contentOk = namesType && distinguishes;
   if (!llm) findings.push("Title content not judged yet (model result missing)");
   else {
-    if (!llm.title.namesProductType) findings.push("Title doesn't say what kind of product it is");
-    if (!llm.title.hasDistinguishingAttribute) findings.push("Title has no distinguishing attribute (model, gender, size…)");
+    if (!namesType) findings.push("Title doesn't say what kind of product it is");
+    if (!distinguishes) findings.push("Title has no distinguishing attribute (model, gender, size…)");
   }
   return { score: (formatOk ? 0.5 : 0) + (contentOk ? 0.5 : 0), findings };
 }

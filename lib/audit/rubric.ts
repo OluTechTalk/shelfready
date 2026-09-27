@@ -261,11 +261,20 @@ export const AttributeInProseSchema = z.object({
 
 export type AttributeInProse = z.infer<typeof AttributeInProseSchema>;
 
+// Each verdict carries the exact title words it relied on; the scorer rejects words that
+// aren't in the title, the same no-quote-no-credit rule as check 2.
 export const TitleContentSchema = z.object({
-  namesProductType: z.boolean().describe("The title says what kind of product it is (e.g. 'hiking boot', 'daypack')"),
-  hasDistinguishingAttribute: z
-    .boolean()
-    .describe("The title has at least one specific attribute beyond the type: model name, gender, capacity, material, etc."),
+  productTypeWords: z
+    .string()
+    .nullable()
+    .describe(
+      "The words in the title that name a specific product type a shopper would search for, e.g. 'Rain Jacket', 'Hiking Boot', 'Daypack', 'Sleeping Bag'. Null if the title only uses a vague word ('Layer', 'Gear', 'Item', 'Accessory', 'Bag' alone).",
+    ),
+  distinguishingWords: z
+    .array(z.string())
+    .describe(
+      "Each title phrase, copied exactly and listed separately, that distinguishes this product from others of its type: a model name, gender, capacity, material, season or size. Marketing adjectives ('Cozy', 'Awesome', 'Great', 'Warm') and dates/promo words ('New', '2024', 'Sale') do NOT count. Empty if none.",
+    ),
 });
 
 export type TitleContent = z.infer<typeof TitleContentSchema>;

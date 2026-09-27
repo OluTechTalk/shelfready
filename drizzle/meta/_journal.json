@@ -8,6 +8,13 @@
       "when": 1790353308409,
       "tag": "0000_ancient_blade",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1790526184307,
+      "tag": "0001_tense_meltdown",
+      "breakpoints": true
     }
   ]
 }
