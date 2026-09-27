@@ -55,6 +55,8 @@ export async function judgeProduct(
   category: Category,
   contentHash: string,
   model: ModelSpec,
+  /** Awaited before a real model call (not on a cache hit) — lets batch callers pace requests. */
+  beforeCall?: () => Promise<void>,
 ): Promise<JudgeResult> {
   const db = getDb();
   const key = and(
@@ -65,6 +67,7 @@ export async function judgeProduct(
   const [hit] = await db.select({ result: schema.auditLlmCache.result }).from(schema.auditLlmCache).where(key);
   if (hit) return { result: hit.result as ProductAuditLlmResult, cached: true };
 
+  await beforeCall?.();
   const result = await generateStructured({
     route: "audit.product",
     model,
