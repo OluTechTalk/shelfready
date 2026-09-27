@@ -1,15 +1,60 @@
 // Applies approved fix proposals to Shopify — the only path from the fixer to the store.
-// Rules: only `approved` rows are applied; a product's approved fixes go out as one batch;
-// if the product changed since the proposals were made, nothing is written (re-propose).
-// After writing, the product is re-synced into Postgres so the next audit sees it.
+// Rules: only `approved` rows are applied; each fix is first checked against the live
+// product (the field it changes must still hold the value it was proposed against), so a
+// fix never overwrites something a person changed in Shopify since. After writing, the
+// product is re-synced into Postgres so the next audit sees it.
 
 import { and, eq, inArray, sql } from "drizzle-orm";
+import { METAFIELD_NAMESPACE } from "../catalog/schema";
 import { getDb, schema } from "../db";
 import { applyProductChanges } from "../shopify/apply";
-import { fetchProduct, productContentHash } from "../shopify/products";
-import { FixChangeSchema } from "./types";
+import { fetchProduct, productContentHash, type ShopifyProduct } from "../shopify/products";
+import { FixChangeSchema, type FixChange } from "./types";
 
 export type ApplyResult = { productId: string; handle: string; applied: number; failed: number; error?: string };
+
+const TAXONOMY_PREFIX = "gid://shopify/TaxonomyCategory/";
+const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+
+/**
+ * Optimistic concurrency per field: true when the part of the product this fix changes
+ * still looks the way it did when the fix was proposed (`before`), or already has the
+ * fix's value. Other fields may have changed — including other applied fixes.
+ */
+export function stillCurrent(p: ShopifyProduct, change: FixChange, before: unknown): boolean {
+  switch (change.kind) {
+    case "set_metafield": {
+      const live = p.metafields.find((m) => m.namespace === METAFIELD_NAMESPACE && m.key === change.key)?.value ?? null;
+      return live === null || live === change.value;
+    }
+    case "set_title":
+      return p.title === before || p.title === change.title;
+    case "set_description":
+      return p.descriptionHtml === before || p.descriptionHtml === change.descriptionHtml;
+    case "rename_option":
+      return p.options.some((o) => o.name === change.from || o.name === change.to);
+    case "set_variant_skus":
+      return (before as { variantId: string; sku: string | null }[]).every((b) => {
+        const v = p.variants.find((x) => x.id === b.variantId);
+        return v !== undefined && (v.sku ?? null) === (b.sku ?? null);
+      });
+    case "set_alt_text":
+      return (before as { mediaId: string; alt: string | null }[]).every((b) => {
+        const m = p.media.find((x) => x.id === b.mediaId);
+        return m !== undefined && (m.alt ?? "") === (b.alt ?? "");
+      });
+    case "set_taxonomy": {
+      const b = before as { productType: string; categoryId: string | null; tags: string[] };
+      return (
+        (change.productType === undefined || p.productType === b.productType) &&
+        (change.categoryId === undefined || same(p.category?.id.replace(TAXONOMY_PREFIX, "") ?? null, b.categoryId)) &&
+        (change.tags === undefined || same(p.tags, b.tags))
+      );
+    }
+    case "needs_merchant":
+      return false;
+  }
+}
 
 async function resync(productId: string) {
   const p = await fetchProduct(productId);
@@ -23,13 +68,13 @@ async function resync(productId: string) {
     });
 }
 
-/** Lists the change set that would be written for a product — nothing is sent. */
+/** The approved change set for a product — nothing is sent. */
 export async function approvedChanges(productId: string) {
   const rows = await getDb()
     .select()
     .from(schema.fixProposals)
     .where(and(eq(schema.fixProposals.productId, productId), eq(schema.fixProposals.status, "approved")));
-  return rows.map((r) => ({ id: r.id, contentHash: r.contentHash, change: FixChangeSchema.parse(r.change) }));
+  return rows.map((r) => ({ id: r.id, before: r.before, change: FixChangeSchema.parse(r.change) }));
 }
 
 export async function applyApprovedForProduct(productId: string): Promise<ApplyResult> {
@@ -38,38 +83,35 @@ export async function applyApprovedForProduct(productId: string): Promise<ApplyR
   const handle = (await db.select({ handle: schema.products.handle }).from(schema.products).where(eq(schema.products.id, productId)))[0]?.handle ?? productId;
   if (!rows.length) return { productId, handle, applied: 0, failed: 0 };
 
-  const ids = rows.map((r) => r.id);
-  const fail = async (error: string) => {
-    await db.update(schema.fixProposals).set({ status: "failed", error }).where(inArray(schema.fixProposals.id, ids));
-    return { productId, handle, applied: 0, failed: ids.length, error };
-  };
-
+  const errors = new Map<number, string>();
   const live = await fetchProduct(productId);
-  if (!live) return fail("Product no longer exists in Shopify");
-  const liveHash = productContentHash(live);
-  if (rows.some((r) => r.contentHash !== liveHash)) {
-    return fail("Product changed in Shopify since these fixes were proposed — re-run `npm run propose`");
+  if (!live) for (const r of rows) errors.set(r.id, "Product no longer exists in Shopify");
+  else {
+    for (const r of rows) {
+      if (!stillCurrent(live, r.change, r.before)) errors.set(r.id, "Changed in Shopify since this fix was proposed — re-run `npm run propose`");
+    }
+    // Each step reports on its own, so one rejected write doesn't hide the ones that landed.
+    const toSend = rows.filter((r) => !errors.has(r.id));
+    const stepErrors = await applyProductChanges(productId, toSend.map((r) => r.change));
+    for (const r of toSend) if (stepErrors[r.change.kind]) errors.set(r.id, stepErrors[r.change.kind]!);
   }
 
-  // Each step reports on its own, so one rejected write doesn't hide the ones that landed.
-  const errors = await applyProductChanges(productId, rows.map((r) => r.change).filter((c) => c.kind !== "needs_merchant"));
-  const failedRows = rows.filter((r) => errors[r.change.kind]);
-  const appliedIds = rows.filter((r) => !errors[r.change.kind]).map((r) => r.id);
+  const appliedIds = rows.filter((r) => !errors.has(r.id)).map((r) => r.id);
   if (appliedIds.length) {
     await db
       .update(schema.fixProposals)
       .set({ status: "applied", appliedAt: sql`now()`, error: null })
       .where(inArray(schema.fixProposals.id, appliedIds));
   }
-  for (const r of failedRows) {
-    await db.update(schema.fixProposals).set({ status: "failed", error: errors[r.change.kind] }).where(eq(schema.fixProposals.id, r.id));
+  for (const [id, error] of errors) {
+    await db.update(schema.fixProposals).set({ status: "failed", error }).where(eq(schema.fixProposals.id, id));
   }
-  await resync(productId);
+  if (live) await resync(productId);
   return {
     productId,
     handle,
     applied: appliedIds.length,
-    failed: failedRows.length,
-    ...(failedRows.length ? { error: [...new Set(failedRows.map((r) => errors[r.change.kind]))].join("; ") } : {}),
+    failed: errors.size,
+    ...(errors.size ? { error: [...new Set(errors.values())].join("; ") } : {}),
   };
 }
