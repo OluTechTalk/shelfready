@@ -4,7 +4,7 @@
 
 import { z } from "zod";
 
-export const RUBRIC_VERSION = "v0";
+export const RUBRIC_VERSION = "v1";
 
 // ---------------------------------------------------------------------------
 // Categories
@@ -49,7 +49,8 @@ export const CHECK_IDS = [
 export type CheckId = (typeof CHECK_IDS)[number];
 
 export const CHECKS: Record<CheckId, CheckSpec> = {
-  required_attributes: { id: "required_attributes", label: "Required attributes", weight: 30, type: "rule" },
+  // rule+llm: the model only reports which missing attributes the description states (half credit).
+  required_attributes: { id: "required_attributes", label: "Required attributes", weight: 30, type: "rule+llm" },
   description_answerability: {
     id: "description_answerability",
     label: "Description answerability",
@@ -64,6 +65,27 @@ export const CHECKS: Record<CheckId, CheckSpec> = {
 };
 
 export const TOTAL_WEIGHT = 100;
+
+// ---------------------------------------------------------------------------
+// Rule thresholds (v1)
+// ---------------------------------------------------------------------------
+
+/** Check 1: an attribute stated only in the description (not a metafield) earns this much. */
+export const PROSE_ATTRIBUTE_CREDIT = 0.5;
+
+/** Check 3: option names an agent can map without guessing. */
+export const STANDARD_OPTION_NAMES: readonly string[] = ["Size", "Color"];
+
+/** Check 4: title length bounds (inclusive). */
+export const TITLE_MIN_LENGTH = 20;
+export const TITLE_MAX_LENGTH = 80;
+
+/** Check 4: placeholder or promo text that says nothing about the product. */
+export const TITLE_PLACEHOLDER_PATTERN = /\b(untitled|new|sale|copy|item|product|stuff|20\d\d)\b|!!/i;
+
+/** Check 7: minimum tag count, and tags that don't count toward it (promo/status, not product facts). */
+export const MIN_TAGS = 3;
+export const NON_MEANINGFUL_TAGS: readonly string[] = ["new", "sale", "bestseller", "featured", "clearance", "hot"];
 
 // ---------------------------------------------------------------------------
 // Bands (score is 0–100; a band covers [min, next band's min))
@@ -224,3 +246,42 @@ export function answerabilitySchemaFor(category: Category) {
       .length(QUESTIONS_PER_CATEGORY),
   });
 }
+
+// ---------------------------------------------------------------------------
+// Single per-product model call (v1): check 2 answers, check 1 prose attributes, check 4
+// title content. One call per product keeps the free-tier budget at ~150 calls per audit.
+// Evidence rules match check 2: no verbatim quote = not stated.
+// ---------------------------------------------------------------------------
+
+export const AttributeInProseSchema = z.object({
+  key: z.string().describe("The attribute key, copied exactly"),
+  stated: z.boolean().describe("True only if the description states this attribute's value"),
+  evidence: z.string().nullable().describe("A verbatim quote from the description stating the value, or null"),
+});
+
+export type AttributeInProse = z.infer<typeof AttributeInProseSchema>;
+
+export const TitleContentSchema = z.object({
+  namesProductType: z.boolean().describe("The title says what kind of product it is (e.g. 'hiking boot', 'daypack')"),
+  hasDistinguishingAttribute: z
+    .boolean()
+    .describe("The title has at least one specific attribute beyond the type: model name, gender, capacity, material, etc."),
+});
+
+export type TitleContent = z.infer<typeof TitleContentSchema>;
+
+export function productAuditSchemaFor(category: Category) {
+  const keys = REQUIRED_ATTRIBUTES[category].map((a) => a.key) as [string, ...string[]];
+  return answerabilitySchemaFor(category).extend({
+    attributes: z
+      .array(AttributeInProseSchema.extend({ key: z.enum(keys) }))
+      .length(keys.length),
+    title: TitleContentSchema,
+  });
+}
+
+export type ProductAuditLlmResult = {
+  answers: QuestionAnswer[];
+  attributes: AttributeInProse[];
+  title: TitleContent;
+};

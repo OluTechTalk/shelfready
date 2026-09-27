@@ -1,6 +1,6 @@
-# ShelfReady — Agent Readiness Rubric (v0 draft)
+# ShelfReady — Agent Readiness Rubric (v1)
 
-Status: v0, drafted before the build. Finalize in Episode 03 after looking at the real seeded catalog. Log any change to weights or checks in DECISIONS.md.
+Status: v1, finalized in Episode 03 against the seeded catalog. Constants and thresholds live in `lib/audit/rubric.ts` (the code wins). Log any change to weights or checks in DECISIONS.md.
 
 **The question behind every check:** could an AI shopping agent, given only this product's data, confidently match it to a shopper's request and answer their follow-up questions?
 
@@ -10,7 +10,7 @@ Each product scores 0–100 as the weighted sum of seven checks. Each check retu
 
 | # | Check | Weight | Type | Scores 1.0 when… |
 |---|---|---|---|---|
-| 1 | Required attributes | 30 | Rule | Every required attribute for the product's category is present as a structured field (metafield), not just mentioned in the description |
+| 1 | Required attributes | 30 | Rule + LLM | Every required attribute for the product's category is present as a structured field (metafield), not just mentioned in the description |
 | 2 | Description answerability | 20 | LLM | The description answers all 5 standard shopper questions for its category (see below) |
 | 3 | Variant structure | 15 | Rule | Options use standard names (Size, Color), no duplicate variants, every variant has a SKU and price |
 | 4 | Title specificity | 10 | Rule + LLM | 20–80 chars, includes product type + one distinguishing attribute, no ALL CAPS, no placeholder text |
@@ -18,7 +18,25 @@ Each product scores 0–100 as the weighted sum of seven checks. Each check retu
 | 6 | Images & alt text | 10 | Rule | At least 1 image; every image has descriptive alt text (not empty, not the filename) |
 | 7 | Taxonomy | 5 | Rule | Product type set, standard category set, ≥ 3 meaningful tags |
 
-Partial credit: checks 1, 3, 6, 7 score as the fraction satisfied (e.g. 3 of 5 required attributes = 0.6). Check 2 = questions answered ÷ 5. Check 4 = 0.5 per sub-condition group met (length/format, content).
+Partial credit: checks 1, 3, 5, 6, 7 score as the fraction satisfied. Check 2 = questions answered ÷ 5. Check 4 = 0.5 per sub-condition group met (length/format, content).
+
+### v1 scoring details
+
+| # | Check | Sub-conditions (each counts equally) |
+|---|---|---|
+| 1 | Required attributes | Per required attribute: metafield present = 1; stated only in the description (verbatim quote from the model) = 0.5; absent = 0. Score = sum ÷ required count. |
+| 2 | Description answerability | Answered questions ÷ 5. An answer whose quote does not appear in the description counts as unanswered. |
+| 3 | Variant structure | (a) every option name is `Size` or `Color`; (b) no duplicate variants — values compared after normalizing synonyms (`M` = `Medium`, `Blk` = `Black`); (c) every variant has a unique SKU; (d) every variant has a price. |
+| 4 | Title specificity | Format group (rule, 0.5): 20–80 chars, not ALL CAPS, no placeholder or promo text (`untitled`, `new`, `sale`, a year, `!!`). Content group (LLM, 0.5): names the product type **and** has one distinguishing attribute. |
+| 5 | Price & availability | (a) every price > 0; (b) compare-at ≥ price wherever set; (c) inventory tracked on every variant; (d) every variant has a stock quantity. |
+| 6 | Images & alt text | 0 with no images; otherwise images with descriptive alt ÷ images. Bad alt = empty, a filename, or a camera-style name (`IMG_2231`). |
+| 7 | Taxonomy | (a) product type set; (b) Shopify standard category set; (c) ≥ 3 meaningful tags — promo/status tags (`new`, `sale`, `bestseller`) don't count. |
+
+**One model call per product** covers check 2, the half-credit part of check 1, and the content half of check 4 (`productAuditSchemaFor` in `lib/audit/rubric.ts`).
+
+### Category resolution
+
+The audit never uses the fixture's labels. It works out each product's category from what an agent can see, first match wins: product type → Shopify category (leaf) → title → handle → description (`lib/audit/category.ts`). On the seeded catalog this resolves 150/150 correctly (137 by product type, 13 by title).
 
 ## Bands
 
@@ -75,6 +93,6 @@ Wording matches `SHOPPER_QUESTIONS` in `lib/audit/rubric.ts` (the code wins); id
 
 Aim for a spread: some products with one defect, some with 3+, so the score distribution looks realistic.
 
-## Open questions for Episode 03
-- Should check 1 accept attributes found in the description at half credit? (Argument: agents can read prose, but less reliably.)
-- Is 30 the right weight for required attributes, or does that over-punish accessories?
+## Resolved in v1 (Episode 03)
+- **Half credit for attributes found only in the description: yes** (0.5 each). Agents can read prose, but less reliably than structured fields. It also makes seeded defect 2 (in prose) score above defect 3 (missing), which matches how agents actually behave.
+- **Required-attributes weight stays 30.** Accessories have only 3 required attributes, so one gap costs 10 points (vs 5 for footwear). Revisit if the first full audit shows accessories landing in the wrong band.

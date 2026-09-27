@@ -2,6 +2,24 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-09-27 — Rubric v1: half credit for attributes stated only in the description
+- Options: metafield or nothing (v0); half credit when the description states the value; full credit either way
+- Chose: 0.5 per attribute found only in prose, judged by the model with a required verbatim quote
+- Why: agents can read prose but match on it less reliably than on structured fields. Half credit separates "in the description" (fixable by extraction) from "missing" (needs merchant input), which is exactly the split the fixer will act on.
+- Trade-offs: check 1 now depends on a model call; mitigated by requiring a quote that must appear in the description
+
+## 2026-09-27 — One model call per product for all LLM judgments
+- Options: separate calls for check 2, check 1 prose attributes, and check 4 title content; one combined structured call
+- Chose: one call with a per-category Zod schema (`productAuditSchemaFor`)
+- Why: 150 calls per full audit instead of ~450 — fits the free tier and keeps latency and cost numbers simple for the case study
+- Trade-offs: a larger prompt per call; a malformed response affects three checks at once (retried, then the product is marked as failed rather than scored)
+
+## 2026-09-27 — Audit infers the category from product data, not fixture labels
+- Options: read `rubricCategory` from the fixture; infer from product type → Shopify category → title → handle → description
+- Chose: infer (`lib/audit/category.ts`)
+- Why: a real store has no ground-truth labels, and messy products often lack a product type. 150/150 correct on the seeded catalog.
+- Trade-offs: keyword rules need extending for new product kinds; unmatched products are reported as unscored instead of guessed
+
 ## 2026-09-27 — Seed resume state lives in Shopify, not in a local progress file
 - Options: local progress file listing finished handles; query the store and compare a per-product fixture hash stored in a `shelfready_seed.hash` metafield
 - Chose: hash metafield, written in the same `productSet` mutation as the product
