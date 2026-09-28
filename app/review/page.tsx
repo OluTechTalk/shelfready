@@ -48,7 +48,7 @@ function Diff({ before, after }: { before: string | null; after: string }) {
   );
 }
 
-function ChangeView({ item }: { item: ReviewItem }) {
+function ChangeView({ item, names }: { item: ReviewItem; names: Record<string, string> }) {
   const c = item.change;
   switch (c.kind) {
     case "set_title":
@@ -82,7 +82,9 @@ function ChangeView({ item }: { item: ReviewItem }) {
       return (
         <div className="grid gap-2">
           {c.productType !== undefined && <Diff before={b.productType || null} after={`Type: ${c.productType}`} />}
-          {c.categoryId !== undefined && <Diff before={b.categoryId} after={`Category: ${c.categoryId}`} />}
+          {c.categoryId !== undefined && (
+            <Diff before={b.categoryId ? (names[b.categoryId] ?? b.categoryId) : null} after={`Category: ${names[c.categoryId] ?? c.categoryId}`} />
+          )}
           {c.tags !== undefined && <Diff before={b.tags.join(", ") || null} after={`Tags: ${c.tags.join(", ")}`} />}
         </div>
       );
@@ -114,7 +116,7 @@ function EditForm({ item }: { item: ReviewItem }) {
   );
 }
 
-function ItemRow({ item, admin }: { item: ReviewItem; admin: boolean }) {
+function ItemRow({ item, admin, names }: { item: ReviewItem; admin: boolean; names: Record<string, string> }) {
   const decidable = admin && (item.status === "pending" || item.status === "approved");
   return (
     <li className="grid gap-2 px-4 py-4">
@@ -128,7 +130,7 @@ function ItemRow({ item, admin }: { item: ReviewItem; admin: boolean }) {
         </p>
         <span className="text-xs opacity-50">#{item.id}</span>
       </div>
-      <ChangeView item={item} />
+      <ChangeView item={item} names={names} />
       {item.evidence && <p className="text-sm opacity-70">Source: “{item.evidence}”</p>}
       {item.error && <p className="text-sm text-red-600 dark:text-red-400">{item.error}</p>}
       {decidable && (
@@ -151,7 +153,17 @@ function ItemRow({ item, admin }: { item: ReviewItem; admin: boolean }) {
   );
 }
 
-function ProductCard({ product, admin, status }: { product: ReviewProduct; admin: boolean; status: FixStatus }) {
+function ProductCard({
+  product,
+  admin,
+  status,
+  names,
+}: {
+  product: ReviewProduct;
+  admin: boolean;
+  status: FixStatus;
+  names: Record<string, string>;
+}) {
   return (
     <section className="rounded-lg border border-black/10 dark:border-white/15">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 px-4 py-3 dark:border-white/15">
@@ -171,7 +183,7 @@ function ProductCard({ product, admin, status }: { product: ReviewProduct; admin
       </header>
       <ul className="divide-y divide-black/10 dark:divide-white/15">
         {product.items.map((item) => (
-          <ItemRow key={item.id} item={item} admin={admin} />
+          <ItemRow key={item.id} item={item} admin={admin} names={names} />
         ))}
       </ul>
     </section>
@@ -182,7 +194,7 @@ export default async function ReviewPage({ searchParams }: { searchParams: Promi
   await connection(); // always read the live queue
   const params = await searchParams;
   const status: FixStatus = isFixStatus(params.status) ? params.status : "pending";
-  const [admin, { products, counts }] = await Promise.all([isAdmin(), getReviewQueue(status)]);
+  const [admin, { products, counts, categoryNames }] = await Promise.all([isAdmin(), getReviewQueue(status)]);
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-16">
@@ -232,7 +244,7 @@ export default async function ReviewPage({ searchParams }: { searchParams: Promi
         {products.length === 0 ? (
           <p className="opacity-70">Nothing here.</p>
         ) : (
-          products.map((p) => <ProductCard key={p.productId} product={p} admin={admin} status={status} />)
+          products.map((p) => <ProductCard key={p.productId} product={p} admin={admin} status={status} names={categoryNames} />)
         )}
       </div>
     </main>

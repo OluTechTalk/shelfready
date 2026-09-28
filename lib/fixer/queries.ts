@@ -28,8 +28,22 @@ export type ReviewProduct = {
 
 export const isFixStatus = (s: string | undefined): s is FixStatus => FIX_STATUSES.includes(s as FixStatus);
 
-export async function getReviewQueue(status: FixStatus): Promise<{ products: ReviewProduct[]; counts: Record<FixStatus, number> }> {
+/** Shopify taxonomy id ("aa-1-10-2-10") → full name, from the categories the store already uses. */
+async function categoryNames(): Promise<Record<string, string>> {
+  const rows = await getDb().select({ raw: schema.products.raw }).from(schema.products);
+  const names: Record<string, string> = {};
+  for (const { raw } of rows) {
+    const c = (raw as ShopifyProduct).category;
+    if (c) names[c.id.replace("gid://shopify/TaxonomyCategory/", "")] = c.fullName;
+  }
+  return names;
+}
+
+export async function getReviewQueue(
+  status: FixStatus,
+): Promise<{ products: ReviewProduct[]; counts: Record<FixStatus, number>; categoryNames: Record<string, string> }> {
   const db = getDb();
+  const names = await categoryNames();
   const all = await db.select({ status: schema.fixProposals.status }).from(schema.fixProposals);
   const counts = Object.fromEntries(FIX_STATUSES.map((s) => [s, all.filter((r) => r.status === s).length])) as Record<FixStatus, number>;
 
@@ -38,7 +52,7 @@ export async function getReviewQueue(status: FixStatus): Promise<{ products: Rev
     .from(schema.fixProposals)
     .where(eq(schema.fixProposals.status, status))
     .orderBy(schema.fixProposals.handle, schema.fixProposals.id);
-  if (!rows.length) return { products: [], counts };
+  if (!rows.length) return { products: [], counts, categoryNames: names };
 
   const ids = [...new Set(rows.map((r) => r.productId))];
   const products = await db.select({ id: schema.products.id, raw: schema.products.raw }).from(schema.products).where(inArray(schema.products.id, ids));
@@ -75,5 +89,5 @@ export async function getReviewQueue(status: FixStatus): Promise<{ products: Rev
     byProduct.set(r.productId, entry);
   }
   // Worst-scoring products first: that's where a reviewer's time matters most.
-  return { products: [...byProduct.values()].sort((a, b) => (a.score ?? 100) - (b.score ?? 100)), counts };
+  return { products: [...byProduct.values()].sort((a, b) => (a.score ?? 100) - (b.score ?? 100)), counts, categoryNames: names };
 }
