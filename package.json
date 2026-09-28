@@ -20,6 +20,7 @@
     "propose": "tsx --env-file=.env.local scripts/propose.ts",
     "fix": "tsx --env-file=.env.local scripts/fix.ts",
     "check:fixes": "tsx --env-file=.env.local scripts/check-fixes.ts",
+    "eval:tasks": "tsx evals/generate-tasks.ts",
     "generate:catalog": "tsx scripts/generate-catalog.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs migrate"

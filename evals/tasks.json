@@ -1,0 +1,998 @@
+{
+  "version": 1,
+  "seed": 20260928,
+  "tasks": [
+    {
+      "id": "T01",
+      "request": "Looking for a men's vest in size XS, in Forest Green, under $120.",
+      "kind": "messy_target",
+      "target": "headwall-insulated-vest-mens",
+      "targetDefects": [
+        "vague_title",
+        "bad_alt_text",
+        "missing_taxonomy"
+      ],
+      "constraints": {
+        "productTypes": [
+          "Vests"
+        ],
+        "gender": "mens",
+        "size": "XS",
+        "color": "Forest Green",
+        "maxPrice": 120
+      },
+      "acceptable": [
+        "headwall-insulated-vest-mens"
+      ]
+    },
+    {
+      "id": "T02",
+      "request": "I want an ultralight pack for fastpacking, around 38 liters.",
+      "kind": "messy_target",
+      "target": "cedar-38l-ultralight-pack",
+      "targetDefects": [
+        "attributes_in_description_only"
+      ],
+      "constraints": {
+        "attrIncludes": [
+          {
+            "key": "use_case",
+            "text": "Fastpacking"
+          }
+        ],
+        "attrRange": [
+          {
+            "key": "capacity_l",
+            "min": 35,
+            "max": 41
+          }
+        ]
+      },
+      "acceptable": [
+        "tarn-36l-ultralight-pack",
+        "cedar-38l-ultralight-pack"
+      ]
+    },
+    {
+      "id": "T03",
+      "request": "I need waterproof women's winter boots in size 11.",
+      "kind": "messy_target",
+      "target": "talus-insulated-winter-boot-womens",
+      "targetDefects": [
+        "inconsistent_option_names",
+        "variant_problems",
+        "bad_alt_text",
+        "marketing_only_description"
+      ],
+      "constraints": {
+        "productTypes": [
+          "Winter Boots"
+        ],
+        "gender": "womens",
+        "size": "11",
+        "waterproof": true
+      },
+      "acceptable": [
+        "zephyr-insulated-winter-boot-womens",
+        "larch-insulated-winter-boot-womens",
+        "talus-insulated-winter-boot-womens"
+      ]
+    },
+    {
+      "id": "T04",
+      "request": "A synthetic sleeping bag rated to 30°F, under $140.",
+      "kind": "messy_target",
+      "target": "aspen-30f-synthetic-sleeping-bag",
+      "targetDefects": [
+        "vague_title"
+      ],
+      "constraints": {
+        "maxPrice": 140,
+        "attrIncludes": [
+          {
+            "key": "temperature_rating",
+            "text": "30°F"
+          },
+          {
+            "key": "fill_type",
+            "text": "synthetic"
+          }
+        ]
+      },
+      "acceptable": [
+        "pika-30f-synthetic-sleeping-bag",
+        "aspen-30f-synthetic-sleeping-bag",
+        "lynx-30f-synthetic-sleeping-bag"
+      ]
+    },
+    {
+      "id": "T05",
+      "request": "I need a 4-season tent that sleeps 2 people, under $690.",
+      "kind": "messy_target",
+      "target": "nimbus-2-person-mountaineering-tent",
+      "targetDefects": [
+        "attributes_in_description_only",
+        "variant_problems"
+      ],
+      "constraints": {
+        "maxPrice": 690,
+        "attrIncludes": [
+          {
+            "key": "season_rating",
+            "text": "4-season"
+          }
+        ],
+        "attrRange": [
+          {
+            "key": "capacity_people",
+            "min": 2,
+            "max": 2
+          }
+        ]
+      },
+      "acceptable": [
+        "nimbus-2-person-mountaineering-tent",
+        "zephyr-2-person-mountaineering-tent",
+        "scree-2-person-mountaineering-tent"
+      ]
+    },
+    {
+      "id": "T06",
+      "request": "I'm after carbon fiber trekking poles, under $120.",
+      "kind": "messy_target",
+      "target": "cascade-carbon-trekking-poles",
+      "targetDefects": [
+        "vague_title",
+        "attributes_missing",
+        "variant_problems"
+      ],
+      "constraints": {
+        "productTypes": [
+          "Trekking Poles"
+        ],
+        "maxPrice": 120,
+        "attrIncludes": [
+          {
+            "key": "material",
+            "text": "carbon"
+          }
+        ]
+      },
+      "acceptable": [
+        "squall-carbon-trekking-poles",
+        "cascade-carbon-trekking-poles"
+      ]
+    },
+    {
+      "id": "T07",
+      "request": "Looking for a men's insulated jacket in size S.",
+      "kind": "messy_target",
+      "target": "zephyr-down-jacket-mens",
+      "targetDefects": [
+        "attributes_missing",
+        "bad_alt_text"
+      ],
+      "constraints": {
+        "productTypes": [
+          "Insulated Jackets"
+        ],
+        "gender": "mens",
+        "size": "S"
+      },
+      "acceptable": [
+        "zephyr-down-jacket-mens",
+        "serac-down-jacket-mens",
+        "cedar-down-jacket-mens"
+      ]
+    },
+    {
+      "id": "T08",
+      "request": "I want a daypack, around 25 liters.",
+      "kind": "messy_target",
+      "target": "cirrus-25l-hiking-daypack",
+      "targetDefects": [
+        "attributes_in_description_only",
+        "variant_problems"
+      ],
+      "constraints": {
+        "attrIncludes": [
+          {
+            "key": "use_case",
+            "text": "Daypack"
+          }
+        ],
+        "attrRange": [
+          {
+            "key": "capacity_l",
+            "min": 22,
+            "max": 28
+          }
+        ]
+      },
+      "acceptable": [
+        "aspen-23l-hiking-daypack",
+        "drift-28l-hiking-daypack",
+        "tamarack-23l-hiking-daypack",
+        "cirrus-25l-hiking-daypack"
+      ]
+    },
+    {
+      "id": "T09",
+      "request": "I need women's hiking shoes in size 5.",
+      "kind": "messy_target",
+      "target": "equinox-low-hiking-shoe-womens",
+      "targetDefects": [
+        "vague_title",
+        "variant_problems",
+        "missing_taxonomy"
+      ],
+      "constraints": {
+        "productTypes": [
+          "Hiking Shoes"
+        ],
+        "gender": "womens",
+        "size": "5"
+      },
+      "acceptable": [
+        "equinox-low-hiking-shoe-womens",
+        "cascade-low-waterproof-hiking-shoe-womens",
+        "ridgeback-low-waterproof-hiking-shoe-womens"
+      ]
+    },
+    {
+      "id": "T10",
+      "request": "A down sleeping bag rated to 20°F, under $240.",
+      "kind": "messy_target",
+      "target": "alder-20f-down-sleeping-bag",
+      "targetDefects": [
+        "inconsistent_option_names"
+      ],
+      "constraints": {
+        "maxPrice": 240,
+        "attrIncludes": [
+          {
+            "key": "temperature_rating",
+            "text": "20°F"
+          },
+          {
+            "key": "fill_type",
+            "text": "down"
+          }
+        ]
+      },
+      "acceptable": [
+        "alder-20f-down-sleeping-bag"
+      ]
+    },
+    {
+      "id": "T11",
+      "request": "I need a 3-season tent that sleeps 4 people.",
+      "kind": "messy_target",
+      "target": "cedar-4-person-camping-tent",
+      "targetDefects": [
+        "inconsistent_option_names",
+        "variant_problems",
+        "bad_alt_text",
+        "missing_taxonomy"
+      ],
+      "constraints": {
+        "attrIncludes": [
+          {
+            "key": "season_rating",
+            "text": "3-season"
+          }
+        ],
+        "attrRange": [
+          {
+            "key": "capacity_people",
+            "min": 4,
+            "max": 4
+          }
+        ]
+      },
+      "acceptable": [
+        "spruce-4-person-camping-tent",
+        "talus-4-person-camping-tent",
+        "cedar-4-person-camping-tent"
+      ]
+    },
+    {
+      "id": "T12",
+      "request": "Looking for a women's rain jacket in size XS, under $220.",
+      "kind": "messy_target",
+      "target": "scree-rain-jacket-womens",
+      "targetDefects": [
+        "missing_taxonomy"
+      ],
+      "constraints": {
+        "productTypes": [
+          "Rain Jackets"
+        ],
+        "gender": "womens",
+        "size": "XS",
+        "maxPrice": 220
+      },
+      "acceptable": [
+        "flint-rain-jacket-womens",
+        "scree-rain-jacket-womens",
+        "juniper-rain-jacket-womens"
+      ]
+    },
+    {
+      "id": "T13",
+      "request": "I want a backpacking pack for multi-day trips, around 47 liters.",
+      "kind": "messy_target",
+      "target": "yarrow-47l-backpacking-pack",
+      "targetDefects": [
+        "attributes_in_description_only",
+        "bad_alt_text"
+      ],
+      "constraints": {
+        "attrIncludes": [
+          {
+            "key": "use_case",
+            "text": "Multi-day"
+          }
+        ],
+        "attrRange": [
+          {
+            "key": "capacity_l",
+            "min": 44,
+            "max": 50
+          }
+        ]
+      },
+      "acceptable": [
+        "yarrow-47l-backpacking-pack"
+      ]
+    },
+    {
+      "id": "T14",
+      "request": "I need men's trail running shoes in size 11, under $180.",
+      "kind": "messy_target",
+      "target": "couloir-trail-running-shoe-mens",
+      "targetDefects": [
+        "variant_problems",
+        "marketing_only_description"
+      ],
+      "constraints": {
+        "productTypes": [
+          "Trail Running Shoes"
+        ],
+        "gender": "mens",
+        "size": "11",
+        "maxPrice": 180
+      },
+      "acceptable": [
+        "fjord-trail-running-shoe-mens",
+        "traverse-trail-running-shoe-mens",
+        "couloir-trail-running-shoe-mens"
+      ]
+    },
+    {
+      "id": "T15",
+      "request": "A synthetic sleeping bag rated to 30°F, under $160.",
+      "kind": "messy_target",
+      "target": "lynx-30f-synthetic-sleeping-bag",
+      "targetDefects": [
+        "vague_title",
+        "attributes_in_description_only",
+        "attributes_missing",
+        "variant_problems"
+      ],
+      "constraints": {
+        "maxPrice": 160,
+        "attrIncludes": [
+          {
+            "key": "temperature_rating",
+            "text": "30°F"
+          },
+          {
+            "key": "fill_type",
+            "text": "synthetic"
+          }
+        ]
+      },
+      "acceptable": [
+        "pika-30f-synthetic-sleeping-bag",
+        "aspen-30f-synthetic-sleeping-bag",
+        "lynx-30f-synthetic-sleeping-bag"
+      ]
+    },
+    {
+      "id": "T16",
+      "request": "I need a 3-season tent that sleeps one person.",
+      "kind": "messy_target",
+      "target": "shale-1-person-ultralight-tent",
+      "targetDefects": [
+        "inconsistent_option_names",
+        "variant_problems",
+        "missing_taxonomy"
+      ],
+      "constraints": {
+        "attrIncludes": [
+          {
+            "key": "season_rating",
+            "text": "3-season"
+          }
+        ],
+        "attrRange": [
+          {
+            "key": "capacity_people",
+            "min": 1,
+            "max": 1
+          }
+        ]
+      },
+      "acceptable": [
+        "tamarack-1-person-ultralight-tent",
+        "shale-1-person-ultralight-tent",
+        "squall-1-person-ultralight-tent"
+      ]
+    },
+    {
+      "id": "T17",
+      "request": "Looking for a men's insulated jacket in size XS, under $300.",
+      "kind": "messy_target",
+      "target": "serac-down-jacket-mens",
+      "targetDefects": [
+        "marketing_only_description"
+      ],
+      "constraints": {
+        "productTypes": [
+          "Insulated Jackets"
+        ],
+        "gender": "mens",
+        "size": "XS",
+        "maxPrice": 300
+      },
+      "acceptable": [
+        "zephyr-down-jacket-mens",
+        "serac-down-jacket-mens",
+        "cedar-down-jacket-mens"
+      ]
+    },
+    {
+      "id": "T18",
+      "request": "I want an ultralight pack for fastpacking, around 30 liters, under $210.",
+      "kind": "messy_target",
+      "target": "harrier-30l-ultralight-pack",
+      "targetDefects": [
+        "attributes_missing",
+        "inconsistent_option_names",
+        "missing_taxonomy"
+      ],
+      "constraints": {
+        "maxPrice": 210,
+        "attrIncludes": [
+          {
+            "key": "use_case",
+            "text": "Fastpacking"
+          }
+        ],
+        "attrRange": [
+          {
+            "key": "capacity_l",
+            "min": 27,
+            "max": 33
+          }
+        ]
+      },
+      "acceptable": [
+        "equinox-31l-ultralight-pack",
+        "stratus-30l-ultralight-pack",
+        "spruce-31l-ultralight-pack",
+        "harrier-30l-ultralight-pack"
+      ]
+    },
+    {
+      "id": "T19",
+      "request": "I need women's trail running shoes in size 6, under $140.",
+      "kind": "messy_target",
+      "target": "couloir-trail-running-shoe-womens",
+      "targetDefects": [
+        "attributes_missing",
+        "inconsistent_option_names"
+      ],
+      "constraints": {
+        "productTypes": [
+          "Trail Running Shoes"
+        ],
+        "gender": "womens",
+        "size": "6",
+        "maxPrice": 140
+      },
+      "acceptable": [
+        "fjord-trail-running-shoe-womens",
+        "couloir-trail-running-shoe-womens"
+      ]
+    },
+    {
+      "id": "T20",
+      "request": "I need a 3-season tent that sleeps 6 people.",
+      "kind": "messy_target",
+      "target": "boulder-6-person-family-camping-tent",
+      "targetDefects": [
+        "vague_title",
+        "bad_alt_text"
+      ],
+      "constraints": {
+        "attrIncludes": [
+          {
+            "key": "season_rating",
+            "text": "3-season"
+          }
+        ],
+        "attrRange": [
+          {
+            "key": "capacity_people",
+            "min": 6,
+            "max": 6
+          }
+        ]
+      },
+      "acceptable": [
+        "boulder-6-person-family-camping-tent",
+        "lupine-6-person-family-camping-tent",
+        "marten-6-person-family-camping-tent"
+      ]
+    },
+    {
+      "id": "T21",
+      "request": "Looking for a women's softshell jacket in size XXL, under $160.",
+      "kind": "messy_target",
+      "target": "lupine-softshell-jacket-womens",
+      "targetDefects": [
+        "attributes_in_description_only",
+        "inconsistent_option_names",
+        "missing_taxonomy"
+      ],
+      "constraints": {
+        "productTypes": [
+          "Softshell Jackets"
+        ],
+        "gender": "womens",
+        "size": "XXL",
+        "maxPrice": 160
+      },
+      "acceptable": [
+        "lupine-softshell-jacket-womens"
+      ]
+    },
+    {
+      "id": "T22",
+      "request": "I want a daypack, around 23 liters, under $90.",
+      "kind": "messy_target",
+      "target": "aspen-23l-hiking-daypack",
+      "targetDefects": [
+        "attributes_missing",
+        "inconsistent_option_names",
+        "marketing_only_description"
+      ],
+      "constraints": {
+        "maxPrice": 90,
+        "attrIncludes": [
+          {
+            "key": "use_case",
+            "text": "Daypack"
+          }
+        ],
+        "attrRange": [
+          {
+            "key": "capacity_l",
+            "min": 20,
+            "max": 26
+          }
+        ]
+      },
+      "acceptable": [
+        "aspen-23l-hiking-daypack",
+        "cirrus-25l-hiking-daypack"
+      ]
+    },
+    {
+      "id": "T23",
+      "request": "I need women's trail running shoes in size 11, under $150.",
+      "kind": "messy_target",
+      "target": "fjord-trail-running-shoe-womens",
+      "targetDefects": [
+        "vague_title",
+        "attributes_in_description_only",
+        "bad_alt_text",
+        "missing_taxonomy"
+      ],
+      "constraints": {
+        "productTypes": [
+          "Trail Running Shoes"
+        ],
+        "gender": "womens",
+        "size": "11",
+        "maxPrice": 150
+      },
+      "acceptable": [
+        "fjord-trail-running-shoe-womens",
+        "couloir-trail-running-shoe-womens"
+      ]
+    },
+    {
+      "id": "T24",
+      "request": "I need a 3-season tent that sleeps 2 people.",
+      "kind": "messy_target",
+      "target": "hemlock-2-person-backpacking-tent",
+      "targetDefects": [
+        "attributes_missing"
+      ],
+      "constraints": {
+        "attrIncludes": [
+          {
+            "key": "season_rating",
+            "text": "3-season"
+          }
+        ],
+        "attrRange": [
+          {
+            "key": "capacity_people",
+            "min": 2,
+            "max": 2
+          }
+        ]
+      },
+      "acceptable": [
+        "hemlock-2-person-backpacking-tent",
+        "quartz-2-person-backpacking-tent",
+        "tundra-2-person-backpacking-tent"
+      ]
+    },
+    {
+      "id": "T25",
+      "request": "Looking for a men's softshell jacket in size XXL, in Black, under $170.",
+      "kind": "messy_target",
+      "target": "saddle-softshell-jacket-mens",
+      "targetDefects": [
+        "attributes_missing"
+      ],
+      "constraints": {
+        "productTypes": [
+          "Softshell Jackets"
+        ],
+        "gender": "mens",
+        "size": "XXL",
+        "color": "Black",
+        "maxPrice": 170
+      },
+      "acceptable": [
+        "saddle-softshell-jacket-mens"
+      ]
+    },
+    {
+      "id": "T26",
+      "request": "I need a 3-season tent that sleeps 2 people, under $380.",
+      "kind": "clean_target",
+      "target": "tundra-2-person-backpacking-tent",
+      "targetDefects": [],
+      "constraints": {
+        "maxPrice": 380,
+        "attrIncludes": [
+          {
+            "key": "season_rating",
+            "text": "3-season"
+          }
+        ],
+        "attrRange": [
+          {
+            "key": "capacity_people",
+            "min": 2,
+            "max": 2
+          }
+        ]
+      },
+      "acceptable": [
+        "hemlock-2-person-backpacking-tent",
+        "quartz-2-person-backpacking-tent",
+        "tundra-2-person-backpacking-tent"
+      ]
+    },
+    {
+      "id": "T27",
+      "request": "I need men's hiking shoes in size 13.",
+      "kind": "clean_target",
+      "target": "ridgeback-low-hiking-shoe-mens",
+      "targetDefects": [],
+      "constraints": {
+        "productTypes": [
+          "Hiking Shoes"
+        ],
+        "gender": "mens",
+        "size": "13"
+      },
+      "acceptable": [
+        "equinox-low-waterproof-hiking-shoe-mens",
+        "cascade-low-waterproof-hiking-shoe-mens",
+        "ridgeback-low-hiking-shoe-mens"
+      ]
+    },
+    {
+      "id": "T28",
+      "request": "Looking for a women's vest in size XXL, in Forest Green.",
+      "kind": "clean_target",
+      "target": "headwall-insulated-vest-womens",
+      "targetDefects": [],
+      "constraints": {
+        "productTypes": [
+          "Vests"
+        ],
+        "gender": "womens",
+        "size": "XXL",
+        "color": "Forest Green"
+      },
+      "acceptable": [
+        "headwall-insulated-vest-womens"
+      ]
+    },
+    {
+      "id": "T29",
+      "request": "A synthetic sleeping bag rated to 40°F, under $130.",
+      "kind": "clean_target",
+      "target": "solstice-40f-synthetic-sleeping-bag",
+      "targetDefects": [],
+      "constraints": {
+        "maxPrice": 130,
+        "attrIncludes": [
+          {
+            "key": "temperature_rating",
+            "text": "40°F"
+          },
+          {
+            "key": "fill_type",
+            "text": "synthetic"
+          }
+        ]
+      },
+      "acceptable": [
+        "solstice-40f-synthetic-sleeping-bag",
+        "ember-40f-synthetic-sleeping-bag",
+        "kestrel-40f-synthetic-sleeping-bag",
+        "scree-40f-synthetic-sleeping-bag"
+      ]
+    },
+    {
+      "id": "T30",
+      "request": "I want a daypack, around 29 liters.",
+      "kind": "clean_target",
+      "target": "ember-29l-hiking-daypack",
+      "targetDefects": [],
+      "constraints": {
+        "attrIncludes": [
+          {
+            "key": "use_case",
+            "text": "Daypack"
+          }
+        ],
+        "attrRange": [
+          {
+            "key": "capacity_l",
+            "min": 26,
+            "max": 32
+          }
+        ]
+      },
+      "acceptable": [
+        "drift-28l-hiking-daypack",
+        "ember-29l-hiking-daypack"
+      ]
+    },
+    {
+      "id": "T31",
+      "request": "I'm after carbon fiber trekking poles, under $130.",
+      "kind": "clean_target",
+      "target": "zephyr-carbon-trekking-poles",
+      "targetDefects": [],
+      "constraints": {
+        "productTypes": [
+          "Trekking Poles"
+        ],
+        "maxPrice": 130,
+        "attrIncludes": [
+          {
+            "key": "material",
+            "text": "carbon"
+          }
+        ]
+      },
+      "acceptable": [
+        "squall-carbon-trekking-poles",
+        "ember-carbon-trekking-poles",
+        "zephyr-carbon-trekking-poles",
+        "cascade-carbon-trekking-poles"
+      ]
+    },
+    {
+      "id": "T32",
+      "request": "I need a 3+ season tent that sleeps 3 people, under $410.",
+      "kind": "clean_target",
+      "target": "drift-3-person-backpacking-tent",
+      "targetDefects": [],
+      "constraints": {
+        "maxPrice": 410,
+        "attrIncludes": [
+          {
+            "key": "season_rating",
+            "text": "3+ season"
+          }
+        ],
+        "attrRange": [
+          {
+            "key": "capacity_people",
+            "min": 3,
+            "max": 3
+          }
+        ]
+      },
+      "acceptable": [
+        "drift-3-person-backpacking-tent",
+        "basalt-3-person-backpacking-tent"
+      ]
+    },
+    {
+      "id": "T33",
+      "request": "I need men's hiking boots in size 13, under $210.",
+      "kind": "clean_target",
+      "target": "yarrow-mid-hiking-boot-mens",
+      "targetDefects": [],
+      "constraints": {
+        "productTypes": [
+          "Hiking Boots"
+        ],
+        "gender": "mens",
+        "size": "13",
+        "maxPrice": 210
+      },
+      "acceptable": [
+        "yarrow-mid-hiking-boot-mens",
+        "boulder-mid-waterproof-hiking-boot-mens",
+        "harrier-mid-waterproof-hiking-boot-mens"
+      ]
+    },
+    {
+      "id": "T34",
+      "request": "Looking for a men's fleece jacket in size L.",
+      "kind": "clean_target",
+      "target": "talus-fleece-jacket-mens",
+      "targetDefects": [],
+      "constraints": {
+        "productTypes": [
+          "Fleece Jackets"
+        ],
+        "gender": "mens",
+        "size": "L"
+      },
+      "acceptable": [
+        "talus-fleece-jacket-mens",
+        "canyon-fleece-jacket-mens",
+        "cairn-fleece-jacket-mens"
+      ]
+    },
+    {
+      "id": "T35",
+      "request": "A down sleeping bag rated to 30°F.",
+      "kind": "clean_target",
+      "target": "zephyr-30f-down-sleeping-quilt",
+      "targetDefects": [],
+      "constraints": {
+        "attrIncludes": [
+          {
+            "key": "temperature_rating",
+            "text": "30°F"
+          },
+          {
+            "key": "fill_type",
+            "text": "down"
+          }
+        ]
+      },
+      "acceptable": [
+        "cirrus-30f-down-sleeping-quilt",
+        "zephyr-30f-down-sleeping-quilt",
+        "granite-30f-down-sleeping-quilt"
+      ]
+    },
+    {
+      "id": "T36",
+      "request": "I need men's trail running shoes in size 10, under $70.",
+      "kind": "no_match",
+      "target": null,
+      "targetDefects": [],
+      "constraints": {
+        "productTypes": [
+          "Trail Running Shoes"
+        ],
+        "gender": "mens",
+        "size": "10",
+        "maxPrice": 70
+      },
+      "acceptable": []
+    },
+    {
+      "id": "T37",
+      "request": "Looking for a women's rain jacket in size XL, in Forest Green, under $90.",
+      "kind": "no_match",
+      "target": null,
+      "targetDefects": [],
+      "constraints": {
+        "productTypes": [
+          "Rain Jackets"
+        ],
+        "gender": "womens",
+        "size": "XL",
+        "color": "Forest Green",
+        "maxPrice": 90
+      },
+      "acceptable": []
+    },
+    {
+      "id": "T38",
+      "request": "I need waterproof women's hiking shoes in size 10, under $70.",
+      "kind": "no_match",
+      "target": null,
+      "targetDefects": [],
+      "constraints": {
+        "productTypes": [
+          "Hiking Shoes"
+        ],
+        "gender": "womens",
+        "size": "10",
+        "maxPrice": 70,
+        "waterproof": true
+      },
+      "acceptable": []
+    },
+    {
+      "id": "T39",
+      "request": "I need a 3+ season tent that sleeps 3 people, under $210.",
+      "kind": "no_match",
+      "target": null,
+      "targetDefects": [],
+      "constraints": {
+        "maxPrice": 210,
+        "attrIncludes": [
+          {
+            "key": "season_rating",
+            "text": "3+ season"
+          }
+        ],
+        "attrRange": [
+          {
+            "key": "capacity_people",
+            "min": 3,
+            "max": 3
+          }
+        ]
+      },
+      "acceptable": []
+    },
+    {
+      "id": "T40",
+      "request": "I need a 3-season tent that sleeps 2 people, under $170.",
+      "kind": "no_match",
+      "target": null,
+      "targetDefects": [],
+      "constraints": {
+        "maxPrice": 170,
+        "attrIncludes": [
+          {
+            "key": "season_rating",
+            "text": "3-season"
+          }
+        ],
+        "attrRange": [
+          {
+            "key": "capacity_people",
+            "min": 2,
+            "max": 2
+          }
+        ]
+      },
+      "acceptable": []
+    }
+  ]
+}
