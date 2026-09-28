@@ -10,25 +10,59 @@ import { applyProduct, decide, editAndApprove, login, logout } from "./actions";
 
 export const metadata: Metadata = { title: "Review queue · ShelfReady" };
 
-const TABS: { status: FixStatus; label: string }[] = [
-  { status: "pending", label: "Pending" },
-  { status: "approved", label: "Approved" },
-  { status: "applied", label: "Applied" },
-  { status: "needs_merchant", label: "Needs merchant" },
-  { status: "failed", label: "Failed" },
-  { status: "rejected", label: "Rejected" },
+const TABS: { status: FixStatus; label: string; meaning: string }[] = [
+  { status: "pending", label: "Pending", meaning: "Suggested fixes waiting for a person to review. Nothing here has changed the store." },
+  { status: "approved", label: "Approved", meaning: "Signed off by a reviewer, but not sent to Shopify yet." },
+  { status: "applied", label: "Applied", meaning: "Approved and live in the Shopify store." },
+  {
+    status: "needs_merchant",
+    label: "Needs merchant",
+    meaning: "Information that doesn't exist anywhere in the product data. The fixer won't invent it — only the merchant can supply it.",
+  },
+  { status: "failed", label: "Failed", meaning: "Approved, but Shopify rejected the change or the product changed since. The reason is shown on each fix." },
+  { status: "rejected", label: "Rejected", meaning: "Turned down by a reviewer. Never sent to Shopify." },
 ];
 
 const KIND_LABEL: Record<ReviewItem["kind"], string> = {
-  set_metafield: "Add attribute",
-  set_title: "Rewrite title",
-  set_description: "Draft description",
-  rename_option: "Rename option",
-  set_variant_skus: "Add SKUs",
-  set_alt_text: "Alt text",
-  set_taxonomy: "Type, category & tags",
-  needs_merchant: "Needs merchant input",
+  set_metafield: "Add a product detail",
+  set_title: "Rewrite the title",
+  set_description: "Rewrite the description",
+  rename_option: "Rename a variant option",
+  set_variant_skus: "Add missing SKUs",
+  set_alt_text: "Describe the photos",
+  set_taxonomy: "Set product type, category & tags",
+  needs_merchant: "Missing information",
 };
+
+/** Why a fix matters, from a shopper's point of view — the case for approving it. */
+function whyItMatters(item: ReviewItem): string {
+  const c = item.change;
+  switch (c.kind) {
+    case "set_metafield":
+      return `Gives AI shopping assistants a clear "${attributeLabel(c.key).toLowerCase()}" to filter and compare on, instead of guessing from the description.`;
+    case "set_title":
+      return "Lets an AI shopping assistant tell what this is — and which model — from the title alone.";
+    case "set_description":
+      return "Lets an assistant answer shoppers' common questions (fit, materials, use, weather) straight from the description.";
+    case "rename_option":
+      return 'Assistants look for "Size" and "Color"; other names make them miss the right variant.';
+    case "set_variant_skus":
+      return "Each variant needs its own SKU so an assistant can put the exact size and color in a cart.";
+    case "set_alt_text":
+      return "Describes each photo for AI assistants and screen readers, instead of a file name.";
+    case "set_taxonomy":
+      return "Files the product under the right type and category, so it shows up when assistants browse or filter.";
+    case "needs_merchant":
+      return "Until the merchant adds this, an assistant will skip this product or guess.";
+  }
+}
+
+function sourceNote(item: ReviewItem): string {
+  if (item.change.kind === "needs_merchant") return "Flagged automatically";
+  return item.source === "model" ? "Suggested by AI, checked against this product's own data" : "Automatic fix from the store's own data";
+}
+
+const shortDate = (d: Date | null) => (d ? d.toLocaleDateString("en-US", { month: "short", day: "numeric" }) : null);
 
 const button = "rounded-md border px-3 py-1 text-sm font-medium";
 const quiet = "border-black/15 hover:bg-black/[.04] dark:border-white/20 dark:hover:bg-white/[.06]";
@@ -136,17 +170,20 @@ function ItemRow({ item, admin, names }: { item: ReviewItem; admin: boolean; nam
   return (
     <li className="grid gap-2 px-4 py-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="font-medium">
-          {KIND_LABEL[item.kind]}{" "}
-          <span className="text-sm font-normal opacity-60">
-            · {CHECKS[item.checkId as CheckId]?.label ?? item.checkId} · {item.source === "model" ? "AI" : "rule"}
-            {item.edited && " · edited"}
-          </span>
-        </p>
-        <span className="text-xs opacity-50">#{item.id}</span>
+        <p className="font-medium">{KIND_LABEL[item.kind]}</p>
+        <span className="text-xs opacity-50">
+          {CHECKS[item.checkId as CheckId]?.label ?? item.checkId} · #{item.id}
+        </span>
       </div>
+      <p className="text-sm opacity-70">{whyItMatters(item)}</p>
       <ChangeView item={item} names={names} />
-      {item.evidence && <p className="text-sm opacity-70">Source: “{item.evidence}”</p>}
+      <p className="text-xs opacity-60">
+        {sourceNote(item)}
+        {item.evidence && <> · based on: “{item.evidence}”</>}
+        {item.edited && " · edited by reviewer"}
+        {item.status === "applied" && item.appliedAt && ` · applied ${shortDate(item.appliedAt)}`}
+        {(item.status === "approved" || item.status === "rejected") && item.decidedAt && ` · ${item.status} ${shortDate(item.decidedAt)}`}
+      </p>
       {item.error && <p className="text-sm text-red-600 dark:text-red-400">{item.error}</p>}
       {decidable && (
         <>
@@ -186,7 +223,7 @@ function ProductCard({
           <h2 className="truncate font-semibold">{product.title}</h2>
           <p className="truncate text-xs opacity-60">
             {product.handle}
-            {product.score !== null && ` · audit score ${product.score.toFixed(1)}`}
+            {product.score !== null && ` · readiness score ${product.score.toFixed(1)} / 100`}
           </p>
         </div>
         {admin && status === "approved" && (
@@ -216,9 +253,7 @@ export default async function ReviewPage({ searchParams }: { searchParams: Promi
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold">Review queue</h1>
-          <p className="mt-1 text-sm opacity-70">
-            Fixes proposed for agent-readiness gaps. Nothing reaches Shopify until an admin approves and applies it.
-          </p>
+          <p className="mt-1 text-sm opacity-70">Suggested fixes that make products easier for AI shopping assistants to find and recommend.</p>
         </div>
         {admin ? (
           <form action={logout} className="flex items-center gap-2 text-sm">
@@ -240,7 +275,17 @@ export default async function ReviewPage({ searchParams }: { searchParams: Promi
         )}
       </div>
       {params.login === "failed" && !admin && <p className="mt-2 text-sm text-red-600 dark:text-red-400">Wrong passcode.</p>}
-      {!admin && <p className="mt-4 text-sm opacity-70">You&apos;re viewing read-only. Approving, editing and applying fixes need the admin passcode.</p>}
+      {!admin && (
+        <div className="mt-6 rounded-lg border border-black/10 px-4 py-3 text-sm dark:border-white/15">
+          <p className="font-medium">How this works</p>
+          <ol className="mt-1 list-decimal space-y-0.5 pl-5 opacity-80">
+            <li>The audit finds gaps that stop AI shopping assistants from understanding a product.</li>
+            <li>The fixer suggests a fix for each gap — using only facts already in the product&apos;s data, never invented ones.</li>
+            <li>A person reviews every fix. Nothing changes in the store until it&apos;s approved and applied.</li>
+          </ol>
+          <p className="mt-2 opacity-60">You&apos;re viewing read-only. Reviewing needs the admin passcode.</p>
+        </div>
+      )}
 
       <nav className="mt-8 flex flex-wrap gap-2" aria-label="Filter by status">
         {TABS.map((t) => (
@@ -254,6 +299,7 @@ export default async function ReviewPage({ searchParams }: { searchParams: Promi
           </a>
         ))}
       </nav>
+      <p className="mt-3 text-sm opacity-70">{TABS.find((t) => t.status === status)!.meaning}</p>
 
       <div className="mt-6 grid gap-4">
         {products.length === 0 ? (

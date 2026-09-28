@@ -16,6 +16,8 @@ export type ReviewItem = {
   status: FixStatus;
   edited: boolean;
   error: string | null;
+  decidedAt: Date | null;
+  appliedAt: Date | null;
 };
 
 export type ReviewProduct = {
@@ -85,6 +87,8 @@ export async function getReviewQueue(
       status: r.status as FixStatus,
       edited: r.edited,
       error: r.error,
+      decidedAt: r.decidedAt,
+      appliedAt: r.appliedAt,
     });
     byProduct.set(r.productId, entry);
   }
