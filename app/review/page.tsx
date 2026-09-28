@@ -3,6 +3,7 @@ import { connection } from "next/server";
 import { isAdmin } from "@/lib/admin/session";
 import { CHECKS, type CheckId } from "@/lib/audit/rubric";
 import { htmlToText } from "@/lib/catalog/defects";
+import { attributeLabel, formatAttributeValue, weightGrams } from "@/lib/fixer/format";
 import { getReviewQueue, isFixStatus, type ReviewItem, type ReviewProduct } from "@/lib/fixer/queries";
 import type { FixStatus } from "@/lib/fixer/types";
 import { applyProduct, decide, editAndApprove, login, logout } from "./actions";
@@ -56,7 +57,7 @@ function ChangeView({ item, names }: { item: ReviewItem; names: Record<string, s
     case "set_description":
       return <Diff before={htmlToText(String(item.before ?? ""))} after={htmlToText(c.descriptionHtml)} />;
     case "set_metafield":
-      return <Diff before={null} after={`${c.key.replace(/_/g, " ")}: ${c.value}`} />;
+      return <Diff before={null} after={`${attributeLabel(c.key)}: ${formatAttributeValue(c.key, c.type, c.value)}`} />;
     case "rename_option":
       return <Diff before={c.from} after={c.to} />;
     case "set_variant_skus":
@@ -105,7 +106,21 @@ function EditForm({ item }: { item: ReviewItem }) {
         <input type="hidden" name="id" value={item.id} />
         {c.kind === "set_title" && <input name="title" defaultValue={c.title} className={field} aria-label="Title" />}
         {c.kind === "set_description" && <textarea name="descriptionHtml" defaultValue={c.descriptionHtml} rows={5} className={field} aria-label="Description HTML" />}
-        {c.kind === "set_metafield" && <input name="value" defaultValue={c.value} className={field} aria-label={c.key} />}
+        {c.kind === "set_metafield" && c.type === "weight" && (
+          <label className="grid gap-1 text-sm">
+            {attributeLabel(c.key)} in grams
+            <input name="value" type="number" min="1" defaultValue={Math.round(weightGrams(c.value) ?? 0)} className={field} />
+          </label>
+        )}
+        {c.kind === "set_metafield" && c.type === "boolean" && (
+          <select name="value" defaultValue={c.value} className={field} aria-label={attributeLabel(c.key)}>
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+          </select>
+        )}
+        {c.kind === "set_metafield" && c.type !== "weight" && c.type !== "boolean" && (
+          <input name="value" defaultValue={c.value} className={field} aria-label={attributeLabel(c.key)} />
+        )}
         {c.kind === "set_alt_text" &&
           c.images.map((img, i) => <input key={img.mediaId} name={`alt-${i}`} defaultValue={img.alt} className={field} aria-label={`Alt text ${i + 1}`} />)}
         <div>

@@ -52,8 +52,18 @@ function editedChange(change: FixChange, formData: FormData): FixChange {
       return { ...change, title: text("title") };
     case "set_description":
       return { ...change, descriptionHtml: text("descriptionHtml") };
-    case "set_metafield":
-      return { ...change, value: text("value") };
+    case "set_metafield": {
+      const value = text("value");
+      // Same encodings the fixer validates: weight is edited as grams, booleans as true/false.
+      if (change.type === "weight") {
+        const grams = Number(value);
+        if (!Number.isFinite(grams) || grams <= 0) throw new Error("Weight must be a positive number of grams");
+        return { ...change, value: JSON.stringify({ value: grams, unit: "GRAMS" }) };
+      }
+      if (change.type === "boolean" && !["true", "false"].includes(value)) throw new Error("Must be Yes or No");
+      if (change.type === "number_integer" && !/^\d+$/.test(value)) throw new Error("Must be a whole number");
+      return { ...change, value };
+    }
     case "set_alt_text":
       return { ...change, images: change.images.map((img, i) => ({ ...img, alt: text(`alt-${i}`) })) };
     default:
