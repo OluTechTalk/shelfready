@@ -1,5 +1,6 @@
 // Generates the demo catalog deterministically (seeded PRNG, no model calls) and writes
-// fixtures/catalog.json + fixtures/ground-truth.json. About a third of the products get
+// fixtures/catalog.json + fixtures/ground-truth.json (+ fixtures/catalog-clean.json: the same
+// products before any defect, used as eval ground truth). About a third of the products get
 // seeded defects from docs/RUBRIC.md. Run: npm run generate:catalog
 
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -312,6 +313,9 @@ function main() {
     return buildProduct(rng, d, i);
   });
 
+  // The true, complete products — the eval's ground truth for what each product really is.
+  const clean = structuredClone(products);
+
   // Pick ~1/3 of each category to make messy, so defects spread across categories.
   const messy = new Set<number>();
   for (const cat of perCategory.keys()) {
@@ -358,6 +362,10 @@ function main() {
   mkdirSync(dir, { recursive: true });
   writeFileSync(join(dir, "catalog.json"), JSON.stringify(catalog, null, 2) + "\n");
   writeFileSync(join(dir, "ground-truth.json"), JSON.stringify(groundTruth, null, 2) + "\n");
+  writeFileSync(
+    join(dir, "catalog-clean.json"),
+    JSON.stringify(CatalogSchema.parse({ version: VERSION, generatorSeed: SEED, products: clean }), null, 2) + "\n",
+  );
 
   const variants = products.reduce((n, p) => n + p.variants.length, 0);
   console.log(`Wrote ${products.length} products (${variants} variants), ${messy.size} messy`);
