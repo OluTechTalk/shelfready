@@ -2,6 +2,12 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-09-28 — Compact MCP tool results; eval on free tiers only
+- Options: pay for Groq's Developer tier; spread free Groq runs over ~4 days; shrink what each tool returns and run Gemini (main model) when its outage clears
+- Chose (Olu): shrink tool results — search returns 5 products by default (max 10) with up to 3 matching variants; `get_product` variants are id + title + price. All structured attributes stay.
+- Why: an agent re-reads every tool result at every step, so a task cost ~10k tokens and a full before/after run ~800k — four days of Groq's free 200k-token daily cap. Search output −53%, product details −29%. Smaller results are also cheaper and faster for real agents on the live MCP server.
+- Trade-offs: an agent sees fewer candidates per search (it can raise `limit` to 10 or refine filters). A partial Groq run made with the old output sizes was discarded so every task runs under the same conditions.
+
 ## 2026-09-28 — MCP search reads the Postgres mirror; availability and carts are live
 - Options: Shopify Storefront search for everything; our synced Postgres copy for search and details, Storefront API for stock and carts
 - Chose: Postgres for `search_products` / `get_product` (behind a `ProductSource` interface); Storefront API for `check_availability` / `create_cart`

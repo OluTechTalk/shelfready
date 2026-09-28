@@ -50,7 +50,7 @@ export const SearchInput = z.object({
     .record(z.string().max(40), z.string().max(60))
     .optional()
     .describe("Other structured attributes to match (case-insensitive contains), e.g. {\"Fill type\": \"down\", \"Season rating\": \"3-season\"}."),
-  limit: z.number().int().min(1).max(20).default(10),
+  limit: z.number().int().min(1).max(10).default(5),
 });
 export type SearchInput = z.infer<typeof SearchInput>;
 
@@ -111,8 +111,9 @@ export async function searchProducts(source: ProductSource, input: SearchInput) 
       productType: p.productType || null,
       price: priceRange(variants),
       attributes: attributes(p),
-      matchingVariants: variants.slice(0, 5).map((v) => ({ variantId: v.id, title: v.title, price: v.price, inStock: (v.inventoryQuantity ?? 0) > 0 })),
-      moreVariants: Math.max(0, variants.length - 5),
+      // Compact on purpose: agents re-read every tool result at every step, so size is cost.
+      matchingVariants: variants.slice(0, 3).map((v) => ({ variantId: v.id, title: v.title, price: v.price, inStock: (v.inventoryQuantity ?? 0) > 0 })),
+      moreVariants: Math.max(0, variants.length - 3),
     })),
   };
 }
@@ -138,15 +139,13 @@ export async function getProduct(source: ProductSource, input: z.infer<typeof Ge
     tags: p.tags,
     options: p.options.map((o) => ({ name: o.name, values: o.values })),
     price: priceRange(p.variants),
+    // The variant title already carries its option values ("10 / Black").
     variants: p.variants.map((v) => ({
       variantId: v.id,
       title: v.title,
-      sku: v.sku,
       price: v.price,
-      compareAtPrice: v.compareAtPrice,
-      options: Object.fromEntries(v.selectedOptions.map((o) => [o.name, o.value])),
+      ...(v.compareAtPrice ? { compareAtPrice: v.compareAtPrice } : {}),
     })),
-    images: p.media.map((m) => m.alt || null),
   };
 }
 
