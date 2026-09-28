@@ -93,3 +93,64 @@ export async function applyProduct(formData: FormData) {
   await applyApprovedForProduct(productId);
   done();
 }
+
+// ---------------------------------------------------------------------------
+// Bulk actions over the products ticked on the page
+// ---------------------------------------------------------------------------
+
+const APPLY_BUDGET_MS = 45_000; // stays inside the page's maxDuration (60 s)
+const APPLY_CONCURRENCY = 3;
+
+function selectedProducts(formData: FormData): string[] {
+  const ids = formData.getAll("productIds").map(String);
+  if (ids.some((id) => !id.startsWith("gid://shopify/Product/"))) throw new Error("Bad product id");
+  return [...new Set(ids)];
+}
+
+function backTo(formData: FormData, notice: string): never {
+  const status = String(formData.get("status") ?? "pending").replace(/[^a-z_]/g, "");
+  redirect(`/review?status=${status}&notice=${encodeURIComponent(notice)}`);
+}
+
+/** Approves every pending fix on the selected products (merchant gaps aren't approvable). */
+export async function bulkApprove(formData: FormData) {
+  await requireAdmin();
+  const ids = selectedProducts(formData);
+  if (!ids.length) backTo(formData, "No products selected.");
+  const updated = await getDb()
+    .update(schema.fixProposals)
+    .set({ status: "approved", decidedAt: sql`now()` })
+    .where(and(inArray(schema.fixProposals.productId, ids), eq(schema.fixProposals.status, "pending")))
+    .returning({ id: schema.fixProposals.id });
+  backTo(formData, `Approved ${updated.length} fix${updated.length === 1 ? "" : "es"} on ${ids.length} product${ids.length === 1 ? "" : "s"}. Nothing is in Shopify until you apply them.`);
+}
+
+/**
+ * Applies approved fixes for the selected products, a few at a time, until the time budget
+ * runs out. Products not reached keep their approved fixes, so clicking again continues.
+ */
+export async function bulkApply(formData: FormData) {
+  await requireAdmin();
+  const ids = selectedProducts(formData);
+  if (!ids.length) backTo(formData, "No products selected.");
+  const started = Date.now();
+  const queue = [...ids];
+  let applied = 0;
+  let failed = 0;
+  let products = 0;
+  await Promise.all(
+    Array.from({ length: APPLY_CONCURRENCY }, async () => {
+      while (queue.length && Date.now() - started < APPLY_BUDGET_MS) {
+        const r = await applyApprovedForProduct(queue.shift()!);
+        if (r.applied || r.failed) products++;
+        applied += r.applied;
+        failed += r.failed;
+      }
+    }),
+  );
+  revalidatePath("/audit");
+  const parts = [`Applied ${applied} fix${applied === 1 ? "" : "es"} on ${products} product${products === 1 ? "" : "s"}.`];
+  if (failed) parts.push(`${failed} failed — see the Failed tab.`);
+  if (queue.length) parts.push(`${queue.length} product${queue.length === 1 ? "" : "s"} still waiting — click Apply again to continue.`);
+  backTo(formData, parts.join(" "));
+}

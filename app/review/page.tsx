@@ -6,9 +6,15 @@ import { htmlToText } from "@/lib/catalog/defects";
 import { attributeLabel, formatAttributeValue, weightGrams } from "@/lib/fixer/format";
 import { getReviewQueue, isFixStatus, type ReviewItem, type ReviewProduct } from "@/lib/fixer/queries";
 import type { FixStatus } from "@/lib/fixer/types";
-import { applyProduct, decide, editAndApprove, login, logout } from "./actions";
+import { applyProduct, bulkApply, bulkApprove, decide, editAndApprove, login, logout } from "./actions";
+import { SelectAll } from "./select-all";
 
 export const metadata: Metadata = { title: "Review queue · ShelfReady" };
+
+// Server Actions on this page (bulk apply) may run up to a minute; bulkApply stops at 45 s.
+export const maxDuration = 60;
+
+const BULK_FORM = "bulk-form";
 
 const TABS: { status: FixStatus; label: string; meaning: string }[] = [
   { status: "pending", label: "Pending", meaning: "Products with fixes waiting for a person to review. Each card shows all of that product’s fixes, so you can see the whole product." },
@@ -274,7 +280,18 @@ function ProductCard({
   return (
     <section className="rounded-lg border border-black/10 dark:border-white/15">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 px-4 py-3 dark:border-white/15">
-        <div className="min-w-0">
+        <div className="flex min-w-0 items-start gap-3">
+          {admin && (
+            <input
+              type="checkbox"
+              name="productIds"
+              value={product.productId}
+              form={BULK_FORM}
+              aria-label={`Select ${product.title}`}
+              className="mt-1.5 size-4 shrink-0"
+            />
+          )}
+          <div className="min-w-0">
           <h2 className="font-semibold">
             {product.title}
             {draft && (
@@ -287,6 +304,7 @@ function ProductCard({
             {product.handle}
             {product.score !== null && ` · readiness score ${product.score.toFixed(1)} / 100`} · {tally.join(" · ")}
           </p>
+          </div>
         </div>
         {admin && approved > 0 && (
           <form action={applyProduct}>
@@ -340,6 +358,11 @@ export default async function ReviewPage({ searchParams }: { searchParams: Promi
         )}
       </div>
       {params.login === "failed" && !admin && <p className="mt-2 text-sm text-red-600 dark:text-red-400">Wrong passcode.</p>}
+      {params.notice && admin && (
+        <p role="status" className="mt-4 rounded-lg border border-black/10 px-4 py-3 text-sm dark:border-white/15">
+          {params.notice}
+        </p>
+      )}
       {!admin && (
         <div className="mt-6 rounded-lg border border-black/10 px-4 py-3 text-sm dark:border-white/15">
           <p className="font-medium">How this works</p>
@@ -365,6 +388,25 @@ export default async function ReviewPage({ searchParams }: { searchParams: Promi
         ))}
       </nav>
       <p className="mt-3 text-sm opacity-70">{TABS.find((t) => t.status === status)!.meaning}</p>
+
+      {admin && products.length > 0 && (
+        <form
+          id={BULK_FORM}
+          className="sticky top-0 z-10 mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-black/10 bg-background px-4 py-3 dark:border-white/15"
+        >
+          <input type="hidden" name="status" value={status} />
+          <span className="text-sm font-medium">Selected products:</span>
+          <SelectAll form={BULK_FORM} />
+          <span className="ml-auto flex flex-wrap gap-2">
+            <button formAction={bulkApprove} className={`${button} ${quiet}`}>
+              Approve pending fixes
+            </button>
+            <button formAction={bulkApply} className={`${button} ${primary}`}>
+              Apply approved to Shopify
+            </button>
+          </span>
+        </form>
+      )}
 
       <div className="mt-6 grid gap-4">
         {products.length === 0 ? (
