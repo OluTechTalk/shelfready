@@ -165,7 +165,8 @@ function EditForm({ item }: { item: ReviewItem }) {
   );
 }
 
-function ItemRow({ item, admin, names }: { item: ReviewItem; admin: boolean; names: Record<string, string> }) {
+function ItemRow({ item, admin, names, product }: { item: ReviewItem; admin: boolean; names: Record<string, string>; product: ReviewProduct }) {
+  const dependsOnTitle = titleDependency(item, product);
   const decidable = admin && (item.status === "pending" || item.status === "approved");
   return (
     <li className="grid gap-2 px-4 py-4">
@@ -177,6 +178,11 @@ function ItemRow({ item, admin, names }: { item: ReviewItem; admin: boolean; nam
       </div>
       <p className="text-sm opacity-70">{whyItMatters(item)}</p>
       <ChangeView item={item} names={names} />
+      {dependsOnTitle && (
+        <p className="text-sm text-amber-700 dark:text-amber-400">
+          Uses the new title from the &ldquo;Rewrite the title&rdquo; fix (#{dependsOnTitle.id}, {dependsOnTitle.status.replace("_", " ")}). It will only be applied together with or after that title.
+        </p>
+      )}
       <p className="text-xs opacity-60">
         {sourceNote(item)}
         {item.evidence && <> · based on: “{item.evidence}”</>}
@@ -235,7 +241,7 @@ function ProductCard({
       </header>
       <ul className="divide-y divide-black/10 dark:divide-white/15">
         {product.items.map((item) => (
-          <ItemRow key={item.id} item={item} admin={admin} names={names} />
+          <ItemRow key={item.id} item={item} admin={admin} names={names} product={product} />
         ))}
       </ul>
     </section>
@@ -310,4 +316,11 @@ export default async function ReviewPage({ searchParams }: { searchParams: Promi
       </div>
     </main>
   );
+}
+
+/** Alt text written with a proposed (not yet live) title depends on that title fix. */
+function titleDependency(item: ReviewItem, product: ReviewProduct) {
+  const fix = product.titleFix;
+  if (item.change.kind !== "set_alt_text" || !fix || fix.title === product.title || fix.status === "applied") return null;
+  return item.change.images.some((img) => img.alt.includes(fix.title)) ? fix : null;
 }

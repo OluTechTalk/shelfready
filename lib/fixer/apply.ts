@@ -4,7 +4,7 @@
 // fix never overwrites something a person changed in Shopify since. After writing, the
 // product is re-synced into Postgres so the next audit sees it.
 
-import { and, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { METAFIELD_NAMESPACE } from "../catalog/schema";
 import { getDb, schema } from "../db";
 import { applyProductChanges } from "../shopify/apply";
@@ -68,6 +68,18 @@ async function resync(productId: string) {
     });
 }
 
+/** The most recent title the fixer proposed for a product, whatever its status. */
+async function latestTitleFix(productId: string): Promise<string | null> {
+  const [row] = await getDb()
+    .select({ change: schema.fixProposals.change })
+    .from(schema.fixProposals)
+    .where(and(eq(schema.fixProposals.productId, productId), eq(schema.fixProposals.kind, "set_title")))
+    .orderBy(desc(schema.fixProposals.id))
+    .limit(1);
+  const change = row ? FixChangeSchema.parse(row.change) : null;
+  return change?.kind === "set_title" ? change.title : null;
+}
+
 /** The approved change set for a product — nothing is sent. */
 export async function approvedChanges(productId: string) {
   const rows = await getDb()
@@ -89,6 +101,20 @@ export async function applyApprovedForProduct(productId: string): Promise<ApplyR
   else {
     for (const r of rows) {
       if (!stillCurrent(live, r.change, r.before)) errors.set(r.id, "Changed in Shopify since this fix was proposed — re-run `npm run propose`");
+    }
+    // Alt text written with a proposed title must not go live under the old title.
+    const newTitle = await latestTitleFix(productId);
+    const titleInBatch = rows.some((r) => r.change.kind === "set_title" && !errors.has(r.id));
+    for (const r of rows) {
+      if (
+        r.change.kind === "set_alt_text" &&
+        newTitle &&
+        newTitle !== live.title &&
+        !titleInBatch &&
+        r.change.images.some((img) => img.alt.includes(newTitle))
+      ) {
+        errors.set(r.id, `Uses the proposed title "${newTitle}" — approve and apply the title fix first, or edit the alt text`);
+      }
     }
     // Each step reports on its own, so one rejected write doesn't hide the ones that landed.
     const toSend = rows.filter((r) => !errors.has(r.id));

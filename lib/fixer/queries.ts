@@ -1,6 +1,6 @@
 // Read-side queries for the review queue UI. No writes, no model calls.
 
-import { desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray } from "drizzle-orm";
 import { getDb, schema } from "../db";
 import type { ShopifyProduct } from "../shopify/products";
 import { FIX_STATUSES, FixChangeSchema, type FixChange, type FixStatus } from "./types";
@@ -26,6 +26,8 @@ export type ReviewProduct = {
   title: string;
   score: number | null; // from the latest audit run
   items: ReviewItem[];
+  /** The title fix for this product, if any: other fixes (alt text) may be built on it. */
+  titleFix: { id: number; title: string; status: FixStatus } | null;
 };
 
 export const isFixStatus = (s: string | undefined): s is FixStatus => FIX_STATUSES.includes(s as FixStatus);
@@ -65,6 +67,16 @@ export async function getReviewQueue(
         (await db.select({ productId: schema.auditScores.productId, score: schema.auditScores.score }).from(schema.auditScores).where(eq(schema.auditScores.runId, run.id))).map((s) => [s.productId, s.score]),
       )
     : new Map<string, number>();
+  const titleFixRows = await db
+    .select({ id: schema.fixProposals.id, productId: schema.fixProposals.productId, change: schema.fixProposals.change, status: schema.fixProposals.status })
+    .from(schema.fixProposals)
+    .where(and(inArray(schema.fixProposals.productId, ids), eq(schema.fixProposals.kind, "set_title")))
+    .orderBy(desc(schema.fixProposals.id));
+  const titleFixes = new Map<string, ReviewProduct["titleFix"]>();
+  for (const t of titleFixRows) {
+    const c = FixChangeSchema.parse(t.change);
+    if (c.kind === "set_title" && !titleFixes.has(t.productId)) titleFixes.set(t.productId, { id: t.id, title: c.title, status: t.status as FixStatus });
+  }
 
   const byProduct = new Map<string, ReviewProduct>();
   for (const r of rows) {
@@ -74,6 +86,7 @@ export async function getReviewQueue(
       title: titles.get(r.productId) ?? r.handle,
       score: scores.get(r.productId) ?? null,
       items: [],
+      titleFix: titleFixes.get(r.productId) ?? null,
     };
     const change = FixChangeSchema.parse(r.change);
     entry.items.push({
