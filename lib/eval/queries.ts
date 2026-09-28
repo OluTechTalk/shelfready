@@ -41,7 +41,8 @@ export type EvalPair = {
 
 /** Labels that have both a before and an after run, newest first. */
 export async function listEvalPairs(): Promise<{ label: string; model: string; createdAt: Date }[]> {
-  const runs = await getDb().select().from(schema.evalRuns).orderBy(desc(schema.evalRuns.id));
+  // Only finished runs: an interrupted run has no summary yet.
+  const runs = (await getDb().select().from(schema.evalRuns).orderBy(desc(schema.evalRuns.id))).filter((r) => typeof (r.summary as { tasks?: number }).tasks === "number");
   const out: { label: string; model: string; createdAt: Date }[] = [];
   for (const r of runs) {
     if (out.some((o) => o.label === r.label)) continue;

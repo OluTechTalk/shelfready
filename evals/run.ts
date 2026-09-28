@@ -7,10 +7,13 @@
 // so the eval never touches the real store. Results go to eval_runs / eval_results and
 // evals/results/<label>-<catalog>.json.
 //
+// Resumable: re-running with the same --label skips finished tasks and retries errored ones.
+//
 // Run: npm run eval [-- --catalog before|after|both] [--model default|backup] [--tasks T01,T02] [--label name]
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
+import { and, eq } from "drizzle-orm";
 import { generateText, isStepCount, tool } from "ai";
 import { z } from "zod";
 import { MODELS, languageModel, type ModelSpec } from "../lib/ai/models";
@@ -36,6 +39,7 @@ import { TaskSchema, type Task } from "./truth";
 const MAX_STEPS = 10;
 const CONCURRENCY = 2;
 const ATTEMPTS = 3;
+const MAX_ERROR_STREAK = 5;
 
 // The eval has no human to answer follow-up questions, so the agent must decide.
 const EVAL_INSTRUCTIONS = `${MCP_INSTRUCTIONS}
@@ -238,29 +242,60 @@ async function main() {
 
   for (const catalog of catalogs) {
     const source = catalog === "before" ? fixtureSource(categoryNames) : postgresSource();
-    console.log(`\n${label} · ${catalog} catalog · ${model.id} · ${tasks.length} tasks`);
-    const results: TaskResult[] = [];
-    await pool(tasks, CONCURRENCY, async (task) => {
-      const r = await runTask(task, source, model, clean);
-      results.push(r);
-      console.log(`  ${r.taskId} ${r.outcome.padEnd(13)} ${String(r.toolCalls).padStart(2)} calls  ${task.request}`);
-    });
-    results.sort((a, b) => a.taskId.localeCompare(b.taskId));
-    const summary = summarize(results, tasks);
 
-    const tokensIn = results.reduce((a, r) => a + r.tokensIn, 0);
-    const tokensOut = results.reduce((a, r) => a + r.tokensOut, 0);
-    await db.insert(schema.modelCalls).values({
-      model: model.id,
-      provider: model.provider,
-      route: `eval.${catalog}`,
-      tokensIn,
-      tokensOut,
-      latencyMs: results.reduce((a, r) => a + r.latencyMs, 0),
-      costUsd: ((tokensIn * model.pricePerMTokIn + tokensOut * model.pricePerMTokOut) / 1_000_000).toFixed(6),
+    // Resumable: the run row exists from the start, each task is saved as it finishes, and a
+    // re-run with the same label skips finished tasks and retries errored ones.
+    let [run] = await db
+      .select({ id: schema.evalRuns.id })
+      .from(schema.evalRuns)
+      .where(and(eq(schema.evalRuns.label, label), eq(schema.evalRuns.catalog, catalog)));
+    run ??= (await db.insert(schema.evalRuns).values({ label, catalog, model: model.id, summary: {} }).returning({ id: schema.evalRuns.id }))[0];
+    await db.delete(schema.evalResults).where(and(eq(schema.evalResults.runId, run.id), eq(schema.evalResults.outcome, "error")));
+    const done = new Set((await db.select({ taskId: schema.evalResults.taskId }).from(schema.evalResults).where(eq(schema.evalResults.runId, run.id))).map((r) => r.taskId));
+    const todo = tasks.filter((t) => !done.has(t.id));
+    console.log(`\n${label} · ${catalog} catalog · ${model.id} · ${todo.length} to run${done.size ? ` (${done.size} already done)` : ""}`);
+
+    const ranNow: TaskResult[] = [];
+    let errorStreak = 0;
+    let aborted = false;
+    await pool(todo, CONCURRENCY, async (task) => {
+      if (aborted) return;
+      const r = await runTask(task, source, model, clean);
+      ranNow.push(r);
+      await db
+        .insert(schema.evalResults)
+        .values({ runId: run.id, ...r })
+        .onConflictDoUpdate({ target: [schema.evalResults.runId, schema.evalResults.taskId], set: { ...r } });
+      console.log(`  ${r.taskId} ${r.outcome.padEnd(13)} ${String(r.toolCalls).padStart(2)} calls  ${task.request}`);
+      // Circuit breaker: a dead connection or exhausted quota fails every task — stop, don't burn the set.
+      errorStreak = r.outcome === "error" ? errorStreak + 1 : 0;
+      if (errorStreak >= MAX_ERROR_STREAK && !aborted) {
+        aborted = true;
+        console.error(`  Stopping: ${MAX_ERROR_STREAK} errors in a row (last: ${r.transcript.error}). Re-run the same command to resume.`);
+      }
     });
-    const [run] = await db.insert(schema.evalRuns).values({ label, catalog, model: model.id, summary }).returning({ id: schema.evalRuns.id });
-    await db.insert(schema.evalResults).values(results.map((r) => ({ runId: run.id, ...r })));
+
+    const tokensIn = ranNow.reduce((a, r) => a + r.tokensIn, 0);
+    const tokensOut = ranNow.reduce((a, r) => a + r.tokensOut, 0);
+    if (ranNow.length) {
+      await db.insert(schema.modelCalls).values({
+        model: model.id,
+        provider: model.provider,
+        route: `eval.${catalog}`,
+        tokensIn,
+        tokensOut,
+        latencyMs: ranNow.reduce((a, r) => a + r.latencyMs, 0),
+        costUsd: ((tokensIn * model.pricePerMTokIn + tokensOut * model.pricePerMTokOut) / 1_000_000).toFixed(6),
+      });
+    }
+    if (aborted) process.exit(1);
+
+    // Summary over everything saved for this run (earlier sessions included).
+    const results = (await db.select().from(schema.evalResults).where(eq(schema.evalResults.runId, run.id)))
+      .map((r) => ({ ...r, outcome: r.outcome as Outcome, transcript: r.transcript as TaskResult["transcript"] }))
+      .sort((a, b) => a.taskId.localeCompare(b.taskId));
+    const summary = summarize(results, tasks);
+    await db.update(schema.evalRuns).set({ summary }).where(eq(schema.evalRuns.id, run.id));
 
     mkdirSync(join(root, "evals", "results"), { recursive: true });
     writeFileSync(join(root, "evals", "results", `${label}-${catalog}.json`), JSON.stringify({ label, catalog, model: model.id, summary, results }, null, 2) + "\n");
