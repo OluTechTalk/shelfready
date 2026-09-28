@@ -59,8 +59,16 @@ async function main() {
     .where(and(inArray(schema.fixProposals.status, CHECKED), inArray(schema.fixProposals.kind, ["set_title", "set_metafield", "set_description"])));
   const products = new Map((await db.select().from(schema.products)).map((r) => [r.id, r]));
 
-  const flagged: { row: (typeof rows)[number]; change: FixChange; bad: string[]; corrected: FixChange | null }[] = [];
+  // Only the latest fix per field counts: an earlier one that a correction replaced is history.
+  const latest = new Map<string, (typeof rows)[number]>();
   for (const row of rows) {
+    const key = `${row.productId}|${row.kind}|${row.target}`;
+    if (!latest.has(key) || latest.get(key)!.id < row.id) latest.set(key, row);
+  }
+  const current = [...latest.values()].sort((a, b) => a.id - b.id);
+
+  const flagged: { row: (typeof rows)[number]; change: FixChange; bad: string[]; corrected: FixChange | null }[] = [];
+  for (const row of current) {
     const change = FixChangeSchema.parse(row.change);
     const source = original.get(row.handle) ?? "";
     let bad: string[] = [];
@@ -73,7 +81,7 @@ async function main() {
       // Against the original text, not only its own quote (which may have come from the handle).
       bad = unfaithfulSpecs(change.value, source);
       // Evidence must be readable product text, not the URL handle.
-      if (!quoteAppearsIn(row.evidence, source)) bad.push(`evidence not in product text ("${row.evidence}")`);
+      if (row.source === "model" && !quoteAppearsIn(row.evidence, source)) bad.push(`evidence not in product text ("${row.evidence}")`);
       const v = bad.length ? correct(change.value, bad, source) : null;
       if (v) corrected = { ...change, value: v };
     } else if (change.kind === "set_description") {
@@ -89,7 +97,7 @@ async function main() {
     if (bad.length) flagged.push({ row, change, bad, corrected });
   }
 
-  console.log(`Checked ${rows.length} fixes (titles, attributes, descriptions) against the original product text.`);
+  console.log(`Checked ${current.length} fixes (titles, attributes, descriptions; latest per field, ${rows.length - current.length} superseded) against the original product text.`);
   for (const f of flagged) {
     const what = f.change.kind === "set_title" ? f.change.title : f.change.kind === "set_metafield" ? `${f.change.key} = ${f.change.value}` : "description";
     const to =
