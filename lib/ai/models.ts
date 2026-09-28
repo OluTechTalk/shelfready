@@ -16,7 +16,9 @@ export type ModelSpec = {
 export const MODELS = {
   // flash-lite, not flash: in Sep 2026 gemini-3.5-flash was intermittently overloaded (503s,
   // 17–70 s calls) while flash-lite answered in < 1 s; gemini-2.5-* is closed to new keys.
-  default: { provider: "google", id: "gemini-3.5-flash-lite", pricePerMTokIn: 0, pricePerMTokOut: 0 },
+  // Paid tier since 2026-09-28 (free tier was rejecting calls under load). Prices from
+  // ai.google.dev/gemini-api/docs/pricing: $0.30 / 1M input, $2.50 / 1M output incl. thinking.
+  default: { provider: "google", id: "gemini-3.5-flash-lite", pricePerMTokIn: 0.3, pricePerMTokOut: 2.5 },
   backup: { provider: "groq", id: "openai/gpt-oss-120b", pricePerMTokIn: 0, pricePerMTokOut: 0 },
 } as const satisfies Record<string, ModelSpec>;
 
