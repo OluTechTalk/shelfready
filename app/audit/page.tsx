@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
-import { getLatestAuditRun, type AuditRunView } from "@/lib/audit/queries";
+import { getBaselineComparison, getLatestAuditRun, type AuditRunView, type BaselineComparison } from "@/lib/audit/queries";
 import { BAND_GATE_THRESHOLD, BANDS, CHECK_IDS, CHECKS, type BandId } from "@/lib/audit/rubric";
 
 export const metadata: Metadata = { title: "Catalog audit · ShelfReady" };
@@ -124,6 +124,62 @@ function ProductRow({ p }: { p: AuditRunView["products"][number] }) {
   );
 }
 
+function BeforeAfter({ comparison, summary }: { comparison: BaselineComparison; summary: AuditRunView["summary"] }) {
+  const before = comparison.baseline.summary;
+  return (
+    <section className="mt-12">
+      <h2 className="text-lg font-semibold">Before → after fixes</h2>
+      <p className="mb-4 text-sm opacity-70">
+        Baseline run #{comparison.baseline.id} vs this run, same rubric and model — every change comes from approved fixes applied in Shopify.
+      </p>
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="text-left opacity-60">
+            <th className="py-1 font-normal">Band</th>
+            <th className="py-1 text-right font-normal">Before</th>
+            <th className="py-1 text-right font-normal">After</th>
+          </tr>
+        </thead>
+        <tbody className="tabular-nums">
+          {BANDS.map((b) => (
+            <tr key={b.id} className="border-t border-black/10 dark:border-white/15">
+              <td className="py-2">
+                <BandBadge band={b.id} />
+              </td>
+              <td className="py-2 text-right">
+                {before.bands[b.id].count} <span className="opacity-60">({before.bands[b.id].pct}%)</span>
+              </td>
+              <td className="py-2 text-right">
+                {summary.bands[b.id].count} <span className="opacity-60">({summary.bands[b.id].pct}%)</span>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+
+      <h3 className="mt-6 font-medium">
+        {comparison.changed.length} product{comparison.changed.length === 1 ? "" : "s"} changed
+      </h3>
+      <ul className="mt-2 divide-y divide-black/10 rounded-lg border border-black/10 dark:divide-white/15 dark:border-white/15">
+        {comparison.changed.map((c) => (
+          <li key={c.productId} className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-3">
+            <span className="w-28 shrink-0 font-semibold tabular-nums">
+              {c.scoreBefore.toFixed(1)} → {c.scoreAfter.toFixed(1)}
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate">{c.titleAfter}</span>
+              {c.titleBefore !== c.titleAfter && <span className="block truncate text-xs opacity-60">was “{c.titleBefore}”</span>}
+            </span>
+            <span className="flex w-full items-center gap-1 text-sm sm:w-auto">
+              <BandBadge band={c.bandBefore} /> <span aria-hidden className="opacity-50">→</span> <BandBadge band={c.bandAfter} />
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 export default async function AuditPage() {
   await connection(); // always read the latest run, never prerender
   const run = await getLatestAuditRun();
@@ -141,6 +197,8 @@ export default async function AuditPage() {
 
   const { summary } = run;
   const worst = run.products.slice(0, WORST_COUNT);
+  const comparison = await getBaselineComparison(run);
+  const delta = comparison ? summary.score - comparison.baseline.summary.score : 0;
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-16">
@@ -157,9 +215,21 @@ export default async function AuditPage() {
             <span className="text-2xl font-normal opacity-50"> / 100</span>
           </p>
           <p className="mt-1 text-sm opacity-70">mean of {summary.products} products</p>
+          {comparison && (
+            <p className="mt-1 text-sm">
+              <span className={delta >= 0 ? "text-green-700 dark:text-green-400" : "text-red-600 dark:text-red-400"}>
+                {delta >= 0 ? "▲" : "▼"} {Math.abs(delta).toFixed(1)}
+              </span>{" "}
+              <span className="opacity-70">
+                vs baseline run #{comparison.baseline.id} ({comparison.baseline.summary.score.toFixed(1)})
+              </span>
+            </p>
+          )}
         </div>
         <BandBar summary={summary} />
       </section>
+
+      {comparison && <BeforeAfter comparison={comparison} summary={summary} />}
 
       <section className="mt-12">
         <h2 className="text-lg font-semibold">Where points are lost</h2>
