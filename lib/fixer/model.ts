@@ -91,6 +91,57 @@ export function ungroundedTitleWords(title: string, facts: string): string[] {
   return tokens(title).filter((w) => !known.has(w) && !allowed.has(w));
 }
 
+/** A number with the unit or symbol that follows it: "30°F", "28L", "28 liters", "400-Lumen", "3-Person". */
+const SPEC_TOKEN = /(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?)(?:\s?-?\s?(°\s?[FC]|degrees?\s+(?:Fahrenheit|Celsius)|[A-Za-z]+))?/gi;
+
+// Temperature written without its scale: fine only if the text never gives the precise form.
+const IMPRECISE_UNITS = new Set(["f", "c", "degree"]);
+
+// Spellings that mean the same unit. A bare "f"/"c" or "degree" is NOT °F/°C: it drops the scale,
+// so those count as their own (wrong) units. Any other word after a number ("5 to 11") isn't a unit.
+const UNIT_ALIASES: Record<string, string> = {
+  l: "l", liter: "l", liters: "l", litre: "l", litres: "l",
+  person: "person", persons: "person", people: "person",
+  lumen: "lumen", lumens: "lumen",
+  g: "g", gram: "g", grams: "g", kg: "kg", oz: "oz", lb: "lb", lbs: "lb",
+  ml: "ml", mm: "mm", cm: "cm",
+  f: "f", c: "c", degree: "degree", degrees: "degree",
+};
+
+function specs(text: string): { raw: string; num: string; unit: string }[] {
+  return [...text.matchAll(SPEC_TOKEN)].map((m) => {
+    const u = (m[2] ?? "").toLowerCase().replace(/\s+/g, "");
+    const unit = u.startsWith("°") ? u : u.startsWith("degree") && u.endsWith("fahrenheit") ? "°f" : u.startsWith("degree") && u.endsWith("celsius") ? "°c" : (UNIT_ALIASES[u] ?? "");
+    // "771.0", "771" and "1,868" / "1868" are the same numbers.
+    return { raw: unit ? m[0] : m[1], num: String(Number(m[1].replace(/,/g, ""))), unit };
+  });
+}
+
+/**
+ * The product's own written text, for checking specs: title, type, description, tags and option
+ * values. Not the handle (a URL slug: "30f") and not attribute values (the fixer may have
+ * written those, and a fix must never be grounded in an earlier fix).
+ */
+export function readableFacts(p: ShopifyProduct): string {
+  return [p.title, p.productType, htmlToText(p.descriptionHtml), ...p.tags, ...p.options.flatMap((o) => o.values)].join("\n");
+}
+
+/**
+ * Every spec in a title must match the product's readable data in number AND unit — "28L" matches
+ * "28 liters", but "30f" or "30 Degree" don't match "30°F". Returns the offending tokens.
+ */
+export function unfaithfulSpecs(title: string, readable: string): string[] {
+  const known = specs(readable);
+  return specs(title)
+    .filter(({ num, unit }) => {
+      const matched = known.some((k) => k.num === num && (unit === "" || k.unit === unit));
+      // "30 Degree" or "30f" where the text says "30°F": the scale was dropped.
+      const vaguer = IMPRECISE_UNITS.has(unit) && known.some((k) => k.num === num && k.unit.startsWith("°"));
+      return !matched || vaguer;
+    })
+    .map((s) => s.raw.trim());
+}
+
 /** Numbers in a drafted description must all appear in the product's own data. */
 export function ungroundedNumbers(text: string, facts: string): string[] {
   const known = new Set(facts.match(/\d+(?:\.\d+)?/g) ?? []);
@@ -163,7 +214,11 @@ export async function modelProposals(
   for (const a of out.attributes) {
     const type = types.get(a.key) ?? "single_line_text_field";
     const value = a.value ? encodeValue(type, a.value) : null;
-    if (!value || !quoteAppearsIn(a.evidence, facts)) continue;
+    // The quote must come from text a shopper can read — never the URL handle ("lynx-30f-…").
+    if (!value || !quoteAppearsIn(a.evidence, readableFacts(p))) continue;
+    // Specs in the value must match the quote exactly: "30°F" from "30°F", never "30F".
+    if (type === "single_line_text_field" && unfaithfulSpecs(value, `${a.evidence}
+${readableFacts(p)}`).length) continue;
     found.add(a.key);
     proposals.push({
       ...base,
@@ -190,7 +245,12 @@ export async function modelProposals(
 
   if (needs.title && out.title) {
     const title = out.title.trim();
-    if (title !== p.title && titleFormatProblems(title).length === 0 && ungroundedTitleWords(title, facts).length === 0) {
+    if (
+      title !== p.title &&
+      titleFormatProblems(title).length === 0 &&
+      ungroundedTitleWords(title, facts).length === 0 &&
+      unfaithfulSpecs(title, readableFacts(p)).length === 0
+    ) {
       proposals.push({ ...base, checkId: "title_specificity", target: "title", change: { kind: "set_title", title }, before: p.title, evidence: null });
     }
   }

@@ -124,7 +124,12 @@ function ChangeView({ item, names }: { item: ReviewItem; names: Record<string, s
     case "set_description":
       return <Diff before={htmlToText(String(item.before ?? ""))} after={htmlToText(c.descriptionHtml)} />;
     case "set_metafield":
-      return <Diff before={null} after={`${attributeLabel(c.key)}: ${formatAttributeValue(c.key, c.type, c.value)}`} />;
+      return (
+        <Diff
+          before={typeof item.before === "string" ? `${attributeLabel(c.key)}: ${formatAttributeValue(c.key, c.type, item.before)}` : null}
+          after={`${attributeLabel(c.key)}: ${formatAttributeValue(c.key, c.type, c.value)}`}
+        />
+      );
     case "rename_option":
       return <Diff before={c.from} after={c.to} />;
     case "set_variant_skus":

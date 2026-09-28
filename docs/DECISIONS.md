@@ -2,6 +2,12 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-09-28 — Specs must survive a fix exactly; the URL handle is never evidence
+- Options: trust word-level grounding (every title word appears somewhere in the product data); check specs (number + unit) against the product's readable text
+- Chose: spec check — every number in a rewritten title or extracted attribute must match the product's own text in number and unit ("28L" = "28 liters", but "30f" or "30 Degree" ≠ "30°F"; the precise form wins over a vaguer tag). Evidence and grounding use readable text only (title, description, tags, options) — never the handle or attribute values the fixer wrote. `npm run check:fixes` audits every fix already written against the original seeded text.
+- Why: a live review showed "Lynx 30f Synthetic Sleeping Bag". Root cause: the handle `lynx-30f-…` counted as product data, so an attribute (temperature_rating = "30F") was "quoted" from the URL and then made the bad title look grounded. The audit found 3 such fixes out of 50 (Lynx attribute + title, Aspen "30 Degree" title); corrections are queued for review.
+- Trade-offs: a correct title that uses a spec spelled differently from the text is dropped (the fixer falls back to leaving it for review)
+
 ## 2026-09-28 — Per-field conflict checks, and bulk apply with a time budget
 - Options: refuse a product's fixes if anything on it changed (whole-product hash); check only the field each fix changes. For bulk apply: one long request; background job; a time-boxed request the reviewer can repeat
 - Chose: per-field check (the field must still hold the value the fix was proposed against); bulk apply processes 3 products at a time for up to 45 s inside a 60 s `maxDuration`, and says how many are still waiting

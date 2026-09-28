@@ -25,7 +25,8 @@ export function stillCurrent(p: ShopifyProduct, change: FixChange, before: unkno
   switch (change.kind) {
     case "set_metafield": {
       const live = p.metafields.find((m) => m.namespace === METAFIELD_NAMESPACE && m.key === change.key)?.value ?? null;
-      return live === null || live === change.value;
+      // Empty when proposed, or a correction of the value it was proposed against.
+      return live === null || live === change.value || (typeof before === "string" && live === before);
     }
     case "set_title":
       return p.title === before || p.title === change.title;
