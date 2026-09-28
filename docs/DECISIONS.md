@@ -2,6 +2,12 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-09-28 — Review lifecycle: rejections stick, merchant gaps close themselves, fixer needs a fresh audit
+- Options: treat each fixer run as independent; carry review decisions forward
+- Chose: carry them forward — a rejected fix isn't suggested again while the field it targets is unchanged (admin can move it back to pending); `needs_merchant` items are dropped once the product changes and re-flagged only if the gap is still there; the fixer skips any product whose latest audit doesn't match its current content
+- Why: re-suggesting rejected fixes wastes reviewer time and erodes trust; merchant gaps must close without manual cleanup; and running the fixer on a stale audit drafted rewrites of descriptions that had already been fixed (caught and deleted — 11 proposals, never reviewed)
+- Trade-offs: the fixed order is sync → audit → propose. Known risk: once an AI-drafted description is applied, later attribute extraction may quote it. Bounded because drafts may only use numbers already in the product data and every draft is human-approved; revisit if drafts start carrying new facts.
+
 ## 2026-09-27 — Anyone can view the review queue; only an admin can change it
 - Options: public approve/reject; admin passcode on write actions; approvals only from the local CLI
 - Chose (Olu): `/review` is read-only for visitors; approve / edit / reject need an admin passcode (`ADMIN_TOKEN`, checked server-side). Until the page ships (Episode 04b), approvals go through `npm run fix`, which needs database credentials.

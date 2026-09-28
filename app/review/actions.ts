@@ -36,11 +36,34 @@ const idFrom = (formData: FormData) => {
 
 export async function decide(formData: FormData) {
   await requireAdmin();
-  const status = formData.get("decision") === "approve" ? "approved" : "rejected";
-  await getDb()
+  const db = getDb();
+  const id = idFrom(formData);
+  const decision = formData.get("decision");
+
+  if (decision === "reopen") {
+    // Rejected → pending, unless a newer open fix for the same field already exists.
+    const [row] = await db.select().from(schema.fixProposals).where(and(eq(schema.fixProposals.id, id), eq(schema.fixProposals.status, "rejected")));
+    if (!row) return done();
+    const [open] = await db
+      .select({ id: schema.fixProposals.id })
+      .from(schema.fixProposals)
+      .where(
+        and(
+          eq(schema.fixProposals.productId, row.productId),
+          eq(schema.fixProposals.kind, row.kind),
+          eq(schema.fixProposals.target, row.target),
+          inArray(schema.fixProposals.status, ["pending", "approved", "needs_merchant"]),
+        ),
+      );
+    if (!open) await db.update(schema.fixProposals).set({ status: "pending", decidedAt: null }).where(eq(schema.fixProposals.id, id));
+    return done();
+  }
+
+  const status = decision === "approve" ? "approved" : "rejected";
+  await db
     .update(schema.fixProposals)
     .set({ status, decidedAt: sql`now()` })
-    .where(and(eq(schema.fixProposals.id, idFrom(formData)), inArray(schema.fixProposals.status, ["pending", "approved"])));
+    .where(and(eq(schema.fixProposals.id, id), inArray(schema.fixProposals.status, ["pending", "approved"])));
   done();
 }
 

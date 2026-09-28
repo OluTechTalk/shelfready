@@ -3,6 +3,8 @@
 // them as `pending` — or `needs_merchant` when only the merchant can supply the data.
 // Never writes to Shopify. Idempotent: products whose open proposals were made against the
 // current content hash are skipped; unapproved proposals for older versions are replaced.
+// Fixes a reviewer rejected are not suggested again while the field they target is unchanged,
+// and needs_merchant items close once the product changes (re-flagged if still missing).
 //
 // Run: npm run sync && npm run audit && npm run propose
 
@@ -34,18 +36,47 @@ async function main() {
   const types = new Map<string, CatalogMetafield["type"]>();
   for (const p of products) for (const m of p.metafields) types.set(m.key, m.type as CatalogMetafield["type"]);
 
+  const hashOf = new Map(rows.map((r) => [r.id, r.contentHash]));
+
+  // Merchant gaps close themselves: once a product has changed (e.g. the merchant added the
+  // missing detail), drop its old needs_merchant items; they're re-flagged below if still missing.
+  const stale = (
+    await db.select({ id: schema.fixProposals.id, productId: schema.fixProposals.productId, contentHash: schema.fixProposals.contentHash }).from(schema.fixProposals).where(eq(schema.fixProposals.status, "needs_merchant"))
+  ).filter((r) => hashOf.has(r.productId) && hashOf.get(r.productId) !== r.contentHash);
+  if (stale.length) await db.delete(schema.fixProposals).where(inArray(schema.fixProposals.id, stale.map((r) => r.id)));
+
+  // A product is up to date if it already has proposals (open or rejected) for its current version.
   const current = await db
     .select({ productId: schema.fixProposals.productId, contentHash: schema.fixProposals.contentHash })
     .from(schema.fixProposals)
-    .where(inArray(schema.fixProposals.status, OPEN));
-  const upToDate = new Set(current.filter((c) => rows.find((r) => r.id === c.productId)?.contentHash === c.contentHash).map((c) => c.productId));
+    .where(inArray(schema.fixProposals.status, [...OPEN, "rejected"]));
+  const upToDate = new Set(current.filter((c) => hashOf.get(c.productId) === c.contentHash).map((c) => c.productId));
+  const rejected = await db
+    .select({ productId: schema.fixProposals.productId, kind: schema.fixProposals.kind, target: schema.fixProposals.target, before: schema.fixProposals.before })
+    .from(schema.fixProposals)
+    .where(eq(schema.fixProposals.status, "rejected"));
+  /** A reviewer turned this exact fix down and the field hasn't changed since: don't suggest it again. */
+  const wasRejected = (f: FixProposal) =>
+    rejected.some((r) => r.productId === f.productId && r.kind === f.change.kind && r.target === f.target && JSON.stringify(r.before ?? null) === JSON.stringify(f.before ?? null));
 
-  const todo = rows.filter((r) => (scores.get(r.id)?.score ?? 100) < 100 && !upToDate.has(r.id));
+  // Proposals are only as good as the audit behind them: a product that changed since the
+  // latest audit (e.g. fixes were just applied) must be re-audited before it gets new fixes.
+  const auditedHash = new Map(
+    (await db.select({ productId: schema.auditScores.productId, contentHash: schema.auditScores.contentHash }).from(schema.auditScores).where(eq(schema.auditScores.runId, run.id))).map(
+      (s) => [s.productId, s.contentHash],
+    ),
+  );
+  const unaudited = rows.filter((r) => auditedHash.get(r.id) !== r.contentHash);
+  if (unaudited.length) {
+    console.warn(`Skipping ${unaudited.length} product(s) that changed since audit run #${run.id} — run \`npm run audit\` first.`);
+  }
+  const todo = rows.filter((r) => (scores.get(r.id)?.score ?? 100) < 100 && !upToDate.has(r.id) && auditedHash.get(r.id) === r.contentHash);
   console.log(`Audit run #${run.id}: ${run.products.filter((s) => s.score < 100).length} products lose points; ${todo.length} need proposals`);
 
   const counts: Record<string, number> = {};
   const failed: string[] = [];
   let modelCalls = 0;
+  let skippedRejected = 0;
 
   await pool(todo, CONCURRENCY, async (row) => {
     const p = row.raw as ShopifyProduct;
@@ -73,6 +104,9 @@ async function main() {
     }
     const fixedTitle = proposals.find((f) => f.change.kind === "set_title");
     proposals.push(...ruleProposals(p, ctx, fixedTitle?.change.kind === "set_title" ? fixedTitle.change.title : undefined));
+    const kept = proposals.filter((f) => !wasRejected(f));
+    skippedRejected += proposals.length - kept.length;
+    proposals.splice(0, proposals.length, ...kept);
     if (!proposals.length) return;
 
     // Replace unapproved proposals made against an older version of this product.
@@ -114,7 +148,9 @@ async function main() {
   const pending = queue.filter((q) => q.status === "pending");
   const merchant = queue.filter((q) => q.status === "needs_merchant");
 
-  console.log(`\nProposed this run (${modelCalls} model calls):`);
+  console.log(
+    `\nProposed this run (${modelCalls} model calls; ${skippedRejected} skipped as previously rejected; ${stale.length} merchant gaps closed):`,
+  );
   for (const [kind, n] of Object.entries(counts).sort()) console.log(`  ${kind.padEnd(18)} ${n}`);
   console.log(
     `Queue: ${pending.length} pending across ${new Set(pending.map((q) => q.productId)).size} products · ` +

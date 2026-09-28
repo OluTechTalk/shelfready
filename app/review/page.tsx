@@ -16,17 +16,44 @@ export const maxDuration = 60;
 
 const BULK_FORM = "bulk-form";
 
-const TABS: { status: FixStatus; label: string; meaning: string }[] = [
-  { status: "pending", label: "Pending", meaning: "Products with fixes waiting for a person to review. Each card shows all of that product’s fixes, so you can see the whole product." },
-  { status: "approved", label: "Approved", meaning: "Products with fixes signed off by a reviewer but not sent to Shopify yet." },
-  { status: "applied", label: "Applied", meaning: "Products with fixes that are live in the Shopify store." },
+// What each status means, and what happens to a fix from here — shown above the list.
+const TABS: { status: FixStatus; label: string; meaning: string; next: string }[] = [
+  {
+    status: "pending",
+    label: "Pending",
+    meaning: "Suggested by the fixer, not reviewed yet. Nothing has changed in the store.",
+    next: "An admin approves it (optionally editing first) or rejects it.",
+  },
+  {
+    status: "approved",
+    label: "Approved",
+    meaning: "Signed off by a reviewer, but not sent to Shopify yet.",
+    next: "Apply sends it to Shopify: it moves to Applied, or to Failed if Shopify refuses it.",
+  },
+  {
+    status: "applied",
+    label: "Applied",
+    meaning: "Live in the Shopify store.",
+    next: "Nothing more to do. The next audit counts it in the product's score.",
+  },
   {
     status: "needs_merchant",
     label: "Needs merchant",
-    meaning: "Information that doesn't exist anywhere in the product data. The fixer won't invent it — only the merchant can supply it.",
+    meaning: "The information doesn't exist anywhere in the product's data, so the fixer won't invent it.",
+    next: "The merchant adds it in Shopify. On the next sync and fixer run, the item closes by itself because the gap is gone.",
   },
-  { status: "failed", label: "Failed", meaning: "Approved, but Shopify rejected the change or the product changed since. The reason is shown on each fix." },
-  { status: "rejected", label: "Rejected", meaning: "Turned down by a reviewer. Never sent to Shopify." },
+  {
+    status: "failed",
+    label: "Failed",
+    meaning: "Approved, but the change didn't land — the reason is shown on each fix.",
+    next: "Retry once the cause is fixed, or the fixer suggests a new version if the product changed.",
+  },
+  {
+    status: "rejected",
+    label: "Rejected",
+    meaning: "Turned down by a reviewer. Never sent to Shopify; the gap stays and still counts in the audit.",
+    next: "The fixer won't suggest the same fix again unless the product changes. An admin can move it back to pending.",
+  },
 ];
 
 const KIND_LABEL: Record<ReviewItem["kind"], string> = {
@@ -215,6 +242,14 @@ function ItemRow({ item, admin, names, product }: { item: ReviewItem; admin: boo
           <EditForm item={item} />
         </>
       )}
+      {admin && item.status === "rejected" && (
+        <form action={decide}>
+          <input type="hidden" name="id" value={item.id} />
+          <button name="decision" value="reopen" className={`${button} ${quiet}`}>
+            Move back to pending
+          </button>
+        </form>
+      )}
     </li>
   );
 }
@@ -387,7 +422,10 @@ export default async function ReviewPage({ searchParams }: { searchParams: Promi
           </a>
         ))}
       </nav>
-      <p className="mt-3 text-sm opacity-70">{TABS.find((t) => t.status === status)!.meaning}</p>
+      <div className="mt-3 text-sm">
+        <p className="opacity-80">{TABS.find((t) => t.status === status)!.meaning}</p>
+        <p className="opacity-60">What happens next: {TABS.find((t) => t.status === status)!.next}</p>
+      </div>
 
       {admin && products.length > 0 && (
         <form
