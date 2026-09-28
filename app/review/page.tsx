@@ -11,9 +11,9 @@ import { applyProduct, decide, editAndApprove, login, logout } from "./actions";
 export const metadata: Metadata = { title: "Review queue · ShelfReady" };
 
 const TABS: { status: FixStatus; label: string; meaning: string }[] = [
-  { status: "pending", label: "Pending", meaning: "Suggested fixes waiting for a person to review. Nothing here has changed the store." },
-  { status: "approved", label: "Approved", meaning: "Signed off by a reviewer, but not sent to Shopify yet." },
-  { status: "applied", label: "Applied", meaning: "Approved and live in the Shopify store." },
+  { status: "pending", label: "Pending", meaning: "Products with fixes waiting for a person to review. Each card shows all of that product’s fixes, so you can see the whole product." },
+  { status: "approved", label: "Approved", meaning: "Products with fixes signed off by a reviewer but not sent to Shopify yet." },
+  { status: "applied", label: "Applied", meaning: "Products with fixes that are live in the Shopify store." },
   {
     status: "needs_merchant",
     label: "Needs merchant",
@@ -171,7 +171,9 @@ function ItemRow({ item, admin, names, product }: { item: ReviewItem; admin: boo
   return (
     <li className="grid gap-2 px-4 py-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="font-medium">{KIND_LABEL[item.kind]}</p>
+        <p className="flex items-center gap-2 font-medium">
+          {KIND_LABEL[item.kind]} <StatusChip status={item.status} />
+        </p>
         <span className="text-xs opacity-50">
           {CHECKS[item.checkId as CheckId]?.label ?? item.checkId} · #{item.id}
         </span>
@@ -211,34 +213,91 @@ function ItemRow({ item, admin, names, product }: { item: ReviewItem; admin: boo
   );
 }
 
+const STATUS_PHRASE: Record<FixStatus, string> = {
+  pending: "pending review",
+  approved: "approved, waiting to apply",
+  applied: "live in Shopify",
+  needs_merchant: "needs the merchant",
+  failed: "failed to apply",
+  rejected: "rejected",
+};
+
+function StatusChip({ status }: { status: FixStatus }) {
+  return (
+    <span className="whitespace-nowrap rounded-full border border-black/15 px-2 py-0.5 text-xs dark:border-white/20">
+      {TABS.find((t) => t.status === status)!.label}
+    </span>
+  );
+}
+
+/** The product as it is now, and what each open fix would change — before the fix-by-fix detail. */
+function Glance({ rows }: { rows: ReviewProduct["glance"] }) {
+  return (
+    <details open className="border-b border-black/10 px-4 py-3 dark:border-white/15">
+      <summary className="cursor-pointer text-sm font-medium">Product at a glance</summary>
+      <dl className="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-1.5 text-sm">
+        {rows.map((r) => (
+          <div key={r.label} className="contents">
+            <dt className="opacity-60">{r.label}</dt>
+            <dd className="min-w-0 break-words">
+              {r.proposed ? (
+                <>
+                  {r.current && r.proposed.status !== "applied" && <span className="line-through opacity-50">{r.current}</span>}{" "}
+                  <span className="font-medium">{r.proposed.status === "applied" ? r.current : r.proposed.value}</span>{" "}
+                  <span className="text-xs italic opacity-70">
+                    ({STATUS_PHRASE[r.proposed.status]}, #{r.proposed.id})
+                  </span>
+                </>
+              ) : (
+                (r.current ?? <span className="opacity-50">(not set)</span>)
+              )}
+            </dd>
+          </div>
+        ))}
+      </dl>
+    </details>
+  );
+}
+
 function ProductCard({
   product,
   admin,
-  status,
   names,
 }: {
   product: ReviewProduct;
   admin: boolean;
-  status: FixStatus;
   names: Record<string, string>;
 }) {
+  const approved = product.statusCounts.approved ?? 0;
+  const draft = product.titleFix && product.titleFix.status !== "applied" && product.titleFix.title !== product.title ? product.titleFix : null;
+  const tally = TABS.filter((t) => product.statusCounts[t.status]).map((t) => `${product.statusCounts[t.status]} ${t.label.toLowerCase()}`);
   return (
     <section className="rounded-lg border border-black/10 dark:border-white/15">
       <header className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 px-4 py-3 dark:border-white/15">
         <div className="min-w-0">
-          <h2 className="truncate font-semibold">{product.title}</h2>
-          <p className="truncate text-xs opacity-60">
+          <h2 className="font-semibold">
+            {product.title}
+            {draft && (
+              <span className="ml-2 text-sm font-normal italic opacity-70">
+                (draft title: “{draft.title}” — {STATUS_PHRASE[draft.status]})
+              </span>
+            )}
+          </h2>
+          <p className="text-xs opacity-60">
             {product.handle}
-            {product.score !== null && ` · readiness score ${product.score.toFixed(1)} / 100`}
+            {product.score !== null && ` · readiness score ${product.score.toFixed(1)} / 100`} · {tally.join(" · ")}
           </p>
         </div>
-        {admin && status === "approved" && (
+        {admin && approved > 0 && (
           <form action={applyProduct}>
             <input type="hidden" name="productId" value={product.productId} />
-            <button className={`${button} ${primary}`}>Apply {product.items.length} to Shopify</button>
+            <button className={`${button} ${primary}`}>
+              Apply {approved} approved to Shopify
+            </button>
           </form>
         )}
       </header>
+      <Glance rows={product.glance} />
       <ul className="divide-y divide-black/10 dark:divide-white/15">
         {product.items.map((item) => (
           <ItemRow key={item.id} item={item} admin={admin} names={names} product={product} />
@@ -311,7 +370,7 @@ export default async function ReviewPage({ searchParams }: { searchParams: Promi
         {products.length === 0 ? (
           <p className="opacity-70">Nothing here.</p>
         ) : (
-          products.map((p) => <ProductCard key={p.productId} product={p} admin={admin} status={status} names={categoryNames} />)
+          products.map((p) => <ProductCard key={p.productId} product={p} admin={admin} names={categoryNames} />)
         )}
       </div>
     </main>
