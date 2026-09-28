@@ -6,10 +6,10 @@ Detailed scope lives in @docs/SPEC.md. Scoring rules live in @docs/RUBRIC.md (v0
 
 ## Current status
 <!-- /end-session updates this block. Keep it to 5 lines. -->
-- Phase: P2 Audit (done) — baseline run #3: store 94.1, 78% ready / 15% partial / 7% not ready; live at /audit
-- Last session: 03 — rubric v1 + band gate, 7 checks, cached per-product model judgment, `npm run audit`, /audit page
-- Next target: Episode 04 — Fixer + review queue (structured proposals, approve/edit/reject, Admin API write-back, re-audit)
-- Blockers: none (Gemini free tier ~15 RPM — full cold audit ≈ 10 min)
+- Phase: P3 Fixer (done) — 101 approved fixes live; store 94.1 → 98.3, Agent-ready 78% → 99.3%, Not ready 11 → 0 (/audit, /review)
+- Last session: 04 — grounded fix proposals, /review (public view, admin passcode, bulk), write-back, before/after
+- Next target: Episode 05 — MCP server (search_products, get_product, check_availability, create_cart → checkout URL)
+- Blockers: none. Order is always sync → audit → propose; 1 pending fix + 15 merchant gaps left in the queue
 
 ## Stack
 - Next.js (App Router) + TypeScript + Tailwind + shadcn/ui, deployed on Vercel Hobby

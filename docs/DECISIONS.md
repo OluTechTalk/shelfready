@@ -2,6 +2,12 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-09-28 — Per-field conflict checks, and bulk apply with a time budget
+- Options: refuse a product's fixes if anything on it changed (whole-product hash); check only the field each fix changes. For bulk apply: one long request; background job; a time-boxed request the reviewer can repeat
+- Chose: per-field check (the field must still hold the value the fix was proposed against); bulk apply processes 3 products at a time for up to 45 s inside a 60 s `maxDuration`, and says how many are still waiting
+- Why: the whole-product hash blocked every remaining fix once one landed. A background queue is more infrastructure than a demo needs, and Vercel Hobby caps function time; unapplied products simply stay approved, so a repeat click is safe.
+- Trade-offs: very large batches need several clicks; a field edited in Shopify after a proposal is refused rather than merged
+
 ## 2026-09-28 — Review lifecycle: rejections stick, merchant gaps close themselves, fixer needs a fresh audit
 - Options: treat each fixer run as independent; carry review decisions forward
 - Chose: carry them forward — a rejected fix isn't suggested again while the field it targets is unchanged (admin can move it back to pending); `needs_merchant` items are dropped once the product changes and re-flagged only if the gap is still there; the fixer skips any product whose latest audit doesn't match its current content
