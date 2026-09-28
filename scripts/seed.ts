@@ -6,6 +6,8 @@
 //   metafield, written in the same mutation. Re-running skips products whose hash matches,
 //   so an interrupted run picks up where it stopped.
 // - Rate limits: handled in adminGraphQL (cost-based backoff); products go one at a time.
+// - Sales channel: every fixture product is published to Online Store so the Storefront API
+//   (MCP availability, carts, checkout) can see it.
 //
 // Run: npm run seed            (--force re-sends every product; --limit N stops after N)
 
@@ -193,6 +195,53 @@ async function upsertProduct(p: CatalogProduct, hash: string, locationId: string
   }
 }
 
+// ---------------------------------------------------------------------------
+// Sales channel: products are only visible to the Storefront API (availability, carts,
+// checkout) once published to the Online Store channel. Publishing doesn't change content.
+// ---------------------------------------------------------------------------
+
+const STOREFRONT_CHANNEL = "Online Store";
+
+async function ensurePublished(handles: Set<string>) {
+  const pubs = await adminGraphQL<{ publications: { nodes: { id: string; name: string }[] } }>(`{ publications(first: 20) { nodes { id name } } }`);
+  const publication = pubs.publications.nodes.find((p) => p.name === STOREFRONT_CHANNEL);
+  if (!publication) throw new Error(`No "${STOREFRONT_CHANNEL}" sales channel in this store`);
+
+  const unpublished: { id: string; handle: string }[] = [];
+  let after: string | null = null;
+  for (;;) {
+    const data: {
+      products: { pageInfo: { hasNextPage: boolean; endCursor: string | null }; nodes: { id: string; handle: string; publishedOnPublication: boolean }[] };
+    } = await adminGraphQL(
+      `#graphql
+      query Published($after: String, $pub: ID!) {
+        products(first: 100, after: $after) {
+          pageInfo { hasNextPage endCursor }
+          nodes { id handle publishedOnPublication(publicationId: $pub) }
+        }
+      }`,
+      { after, pub: publication.id },
+    );
+    for (const n of data.products.nodes) if (handles.has(n.handle) && !n.publishedOnPublication) unpublished.push(n);
+    if (!data.products.pageInfo.hasNextPage) break;
+    after = data.products.pageInfo.endCursor;
+  }
+
+  for (const p of unpublished) {
+    const res = await adminGraphQL<{ publishablePublish: { userErrors: UserError[] } }>(
+      `#graphql
+      mutation Publish($id: ID!, $input: [PublicationInput!]!) {
+        publishablePublish(id: $id, input: $input) { userErrors { field message } }
+      }`,
+      { id: p.id, input: [{ publicationId: publication.id }] },
+    );
+    if (res.publishablePublish.userErrors.length) {
+      throw new Error(`publishablePublish ${p.handle}: ${res.publishablePublish.userErrors.map((e) => e.message).join("; ")}`);
+    }
+  }
+  console.log(`Sales channel "${STOREFRONT_CHANNEL}": ${unpublished.length} published, ${handles.size - unpublished.length} already there`);
+}
+
 async function main() {
   const force = process.argv.includes("--force");
   const limitArg = process.argv.indexOf("--limit");
@@ -231,6 +280,8 @@ async function main() {
       console.error(`${tag} FAILED ${p.handle}: ${msg}`);
     }
   }
+
+  await ensurePublished(fixtureHandles);
 
   const secs = ((Date.now() - t0) / 1000).toFixed(0);
   console.log(

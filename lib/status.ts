@@ -40,6 +40,20 @@ export function runStatusChecks(): Promise<CheckResult[]> {
       const [row] = await getDb().select({ n: count() }).from(schema.products);
       return `connected · ${row.n} products synced`;
     }),
+    run("Storefront API (MCP carts)", async () => {
+      // Products are only visible to shoppers and agents once published to a sales channel.
+      const res = await fetch(`https://${process.env.SHOPIFY_STORE_DOMAIN}/api/${process.env.SHOPIFY_API_VERSION}/graphql.json`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Shopify-Storefront-Access-Token": process.env.SHOPIFY_STOREFRONT_TOKEN ?? "" },
+        body: JSON.stringify({ query: "{ products(first: 1) { nodes { id } } }" }),
+        signal: AbortSignal.timeout(5000),
+        cache: "no-store",
+      });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const body = (await res.json()) as { data?: { products: { nodes: unknown[] } } };
+      if (!body.data?.products.nodes.length) throw new Error("no products visible — publish them to the Online Store channel (npm run seed)");
+      return "products visible to shoppers";
+    }),
     run("Gemini API key", () =>
       checkModelKey("GOOGLE_GENERATIVE_AI_API_KEY", "https://generativelanguage.googleapis.com/v1beta/models", (key) => ({
         "x-goog-api-key": key, // header, not ?key=, so the key never appears in a URL or error
