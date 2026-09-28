@@ -1,26 +1,51 @@
 @import "tailwindcss";
 
+/* Design tokens: page, raised surfaces, borders, muted text, the one accent. */
 :root {
-  --background: #ffffff;
+  --background: #f6f6f4;
   --foreground: #171717;
+  --surface: #ffffff;
+  --surface-muted: #f1f1ee;
+  --border: rgb(0 0 0 / 0.09);
+  --muted: #5f5f5b;
+  --accent: #2a78d6;
+  --accent-soft: rgb(42 120 214 / 0.1);
+  --good-soft: rgb(12 163 12 / 0.1);
+  --bad-soft: rgb(208 59 59 / 0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0c0c0c;
+    --foreground: #ededed;
+    --surface: #161616;
+    --surface-muted: #1d1d1d;
+    --border: rgb(255 255 255 / 0.1);
+    --muted: #a3a39c;
+    --accent: #3987e5;
+    --accent-soft: rgb(57 135 229 / 0.15);
+    --good-soft: rgb(12 163 12 / 0.16);
+    --bad-soft: rgb(208 59 59 / 0.16);
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-line: var(--border);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-good-soft: var(--good-soft);
+  --color-bad-soft: var(--bad-soft);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }

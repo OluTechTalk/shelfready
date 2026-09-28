@@ -1,69 +1,101 @@
-import Image from "next/image";
+import Link from "next/link";
+import { connection } from "next/server";
+import { getBaselineComparison, getLatestAuditRun } from "@/lib/audit/queries";
+import { getEvalPair, listEvalPairs } from "@/lib/eval/queries";
 
-export default function Home() {
+const MCP_URL = "https://shelfready-ashen.vercel.app/api/mcp";
+
+const STEPS = [
+  {
+    href: "/audit",
+    step: "1",
+    title: "Audit",
+    body: "Scores every product 0–100 on what an AI shopping agent needs: structured attributes, answerable descriptions, clean variants, specific titles.",
+  },
+  {
+    href: "/review",
+    step: "2",
+    title: "Review fixes",
+    body: "The fixer proposes fixes grounded in each product's own data. A person approves every change before it reaches Shopify.",
+  },
+  {
+    href: "/eval",
+    step: "3",
+    title: "Measure with agents",
+    body: "The store is open to agents over MCP. The same shopping tasks run on the messy and the fixed catalog to measure the difference.",
+  },
+];
+
+export default async function Home() {
+  await connection();
+  const run = await getLatestAuditRun();
+  const audit = run ? await getBaselineComparison(run) : null;
+  const pairs = await listEvalPairs();
+  const evalPair = pairs[0] ? await getEvalPair(pairs[0].label) : null;
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="mx-auto w-full max-w-3xl px-4 py-14">
+      <p className="text-sm font-medium text-accent">Agent-ready storefront</p>
+      <h1 className="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Make a store&apos;s catalog usable by AI shopping agents.</h1>
+      <p className="mt-3 max-w-2xl text-muted">
+        ShelfReady audits a Shopify catalog, fixes the gaps with AI and human approval, and opens the store to agents through an MCP
+        server — then measures whether agents actually shop better.
+      </p>
+
+      <section className="mt-10 grid gap-4 sm:grid-cols-2">
+        {run && (
+          <Link href="/audit" className="rounded-xl border border-line bg-surface p-5 transition-colors hover:border-accent">
+            <p className="text-sm text-muted">Catalog agent-readiness</p>
+            <p className="mt-1 flex items-baseline gap-2">
+              {audit && <span className="text-2xl font-semibold text-muted">{audit.baseline.summary.score.toFixed(1)} →</span>}
+              <span className="text-4xl font-semibold">{run.summary.score.toFixed(1)}</span>
+              <span className="text-muted">/ 100</span>
+            </p>
+            <p className="mt-1 text-sm text-muted">
+              {run.summary.bands.agent_ready.pct}% of {run.summary.products} products agent-ready
+            </p>
+          </Link>
+        )}
+        <Link href="/eval" className="rounded-xl border border-line bg-surface p-5 transition-colors hover:border-accent">
+          <p className="text-sm text-muted">Agent shopping success</p>
+          {evalPair ? (
+            <>
+              <p className="mt-1 flex items-baseline gap-2">
+                <span className="text-2xl font-semibold text-muted">{evalPair.before.summary.successRate}% →</span>
+                <span className="text-4xl font-semibold">{evalPair.after.summary.successRate}%</span>
+              </p>
+              <p className="mt-1 text-sm text-muted">
+                {evalPair.after.summary.tasks} shopping tasks · {evalPair.model}
+              </p>
+            </>
+          ) : (
+            <p className="mt-2 text-sm text-muted">Eval in progress — results appear here when it finishes.</p>
+          )}
+        </Link>
+      </section>
+
+      <section className="mt-12 grid gap-3">
+        {STEPS.map((s) => (
+          <Link key={s.href} href={s.href} className="group flex gap-4 rounded-xl border border-line bg-surface p-5 transition-colors hover:border-accent">
+            <span aria-hidden className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-soft text-sm font-semibold text-accent">
+              {s.step}
+            </span>
+            <span>
+              <span className="font-semibold group-hover:text-accent">{s.title} →</span>
+              <span className="mt-1 block text-sm text-muted">{s.body}</span>
+            </span>
+          </Link>
+        ))}
+      </section>
+
+      <section className="mt-12 rounded-xl border border-line bg-surface-muted p-5">
+        <p className="font-semibold">Shop it with your own agent</p>
+        <p className="mt-1 text-sm text-muted">
+          Add this MCP server to Claude (Settings → Connectors → Add custom connector) and ask for gear. It can search, check stock and
+          hand you a Shopify checkout link — it never takes payment.
+        </p>
+        <code className="mt-3 block break-all rounded-lg border border-line bg-surface px-3 py-2 font-mono text-sm">{MCP_URL}</code>
+      </section>
+    </main>
   );
 }
