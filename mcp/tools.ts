@@ -195,3 +195,36 @@ export async function createCartTool(source: ProductSource, input: z.infer<typeo
     note: "The shopper completes payment on Shopify's checkout page. This agent never handles payment.",
   };
 }
+
+// ---------------------------------------------------------------------------
+// Wording agents see — shared by the live MCP server and the eval, so the eval measures
+// exactly what a real agent gets.
+// ---------------------------------------------------------------------------
+
+export const MCP_INSTRUCTIONS = `Tools for shopping an outdoor-gear store (boots, jackets, packs, tents, sleeping bags, accessories).
+Typical flow: search_products (use structured filters when the shopper gives them — size, gender, price, waterproof,
+attributes) → get_product for details → check_availability for live stock → create_cart, which returns a Shopify
+checkout URL for the shopper. Create one cart for the variant the shopper chose; if they haven't picked a size or
+color yet, ask first instead of making a cart per option. You never take payment or personal details; the shopper
+pays on Shopify.`;
+
+export const TOOL_INFO = {
+  search_products: {
+    title: "Search products",
+    description:
+      "Find products by free text and/or structured filters. Returns matching products with price range, key attributes and up to 5 matching variants (with variantIds).",
+  },
+  get_product: {
+    title: "Get product details",
+    description: "Full details for one product: description, all structured attributes, options and every variant (with variantIds).",
+  },
+  check_availability: {
+    title: "Check availability",
+    description: "Live stock for specific variants. Check before creating a cart.",
+  },
+  create_cart: {
+    title: "Create cart",
+    description:
+      "Create a cart with the variants the shopper chose and return a Shopify checkout URL to give them. Call it once the shopper has picked a size and color — ask rather than making a cart per option. Does not take payment; the shopper completes checkout on Shopify.",
+  },
+} as const;

@@ -23,7 +23,8 @@
     "eval:tasks": "tsx evals/generate-tasks.ts",
     "generate:catalog": "tsx scripts/generate-catalog.ts",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs migrate"
+    "db:migrate": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs migrate",
+    "eval": "tsx --env-file=.env.local evals/run.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.82",

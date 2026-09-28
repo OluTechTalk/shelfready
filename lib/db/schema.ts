@@ -115,3 +115,33 @@ export const mcpCalls = pgTable("mcp_calls", {
   source: text("source").notNull().default("live"), // "live" (the MCP route) or an eval run label
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+/** One eval run: a model shopping every task against one catalog ("before" or "after"). */
+export const evalRuns = pgTable("eval_runs", {
+  id: serial("id").primaryKey(),
+  label: text("label").notNull(), // groups a before/after pair, e.g. "2026-09-28-gemini"
+  catalog: text("catalog").notNull(), // "before" (messy fixture) | "after" (fixed live catalog)
+  model: text("model").notNull(),
+  summary: jsonb("summary").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/** One task in an eval run, with its outcome and full transcript. */
+export const evalResults = pgTable(
+  "eval_results",
+  {
+    runId: integer("run_id")
+      .notNull()
+      .references(() => evalRuns.id, { onDelete: "cascade" }),
+    taskId: text("task_id").notNull(),
+    outcome: text("outcome").notNull(), // success | wrong_product | no_cart | wrong_variant | error
+    success: boolean("success").notNull(),
+    steps: integer("steps").notNull(),
+    toolCalls: integer("tool_calls").notNull(),
+    tokensIn: integer("tokens_in").notNull(),
+    tokensOut: integer("tokens_out").notNull(),
+    latencyMs: integer("latency_ms").notNull(),
+    transcript: jsonb("transcript").notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.runId, t.taskId] })],
+);
