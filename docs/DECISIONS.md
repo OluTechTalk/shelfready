@@ -2,6 +2,24 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-09-28 — MCP search reads the Postgres mirror; availability and carts are live
+- Options: Shopify Storefront search for everything; our synced Postgres copy for search and details, Storefront API for stock and carts
+- Chose: Postgres for `search_products` / `get_product` (behind a `ProductSource` interface); Storefront API for `check_availability` / `create_cart`
+- Why: Storefront search is keyword-only and can't filter on our structured attributes (waterproof, capacity, fill type) — exactly the data the audit and fixer improved. The interface lets the P5 eval run the same tools on the original messy catalog. Stock and carts must be live, so they never use the copy.
+- Trade-offs: search is only as fresh as the last sync (the fixer re-syncs each product it changes); text ranking is simple token scoring
+
+## 2026-09-28 — Public MCP endpoint, rate-limited, no auth
+- Options: OAuth-protected MCP; shared API key; public with rate limiting
+- Chose (Olu): public at `/api/mcp` — Upstash sliding window (60 req/min per IP), 64 KB body limit, every call logged to `mcp_calls`
+- Why: anyone should be able to connect Claude to the demo store. The tools are read-only except cart creation, which takes no payment and no customer data (checkout happens on Shopify).
+- Trade-offs: carts can be created anonymously (they expire unused); no per-user quotas beyond IP
+
+## 2026-09-28 — Seed publishes products to the Online Store channel
+- Options: publish by hand in Shopify admin; publish in `npm run seed`
+- Chose: seed (idempotent `publishablePublish`), needs `read_publications` + `write_publications`
+- Why: Active products on no sales channel are invisible to the Storefront API — no stock, no carts. The P5 eval may reseed the store; a manual step would be forgotten.
+- Trade-offs: two more app scopes; the channel is looked up by name ("Online Store")
+
 ## 2026-09-28 — Specs must survive a fix exactly; the URL handle is never evidence
 - Options: trust word-level grounding (every title word appears somewhere in the product data); check specs (number + unit) against the product's readable text
 - Chose: spec check — every number in a rewritten title or extracted attribute must match the product's own text in number and unit ("28L" = "28 liters", but "30f" or "30 Degree" ≠ "30°F"; the precise form wins over a vaguer tag). Evidence and grounding use readable text only (title, description, tags, options) — never the handle or attribute values the fixer wrote. `npm run check:fixes` audits every fix already written against the original seeded text.

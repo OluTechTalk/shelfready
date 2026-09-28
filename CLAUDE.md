@@ -6,10 +6,10 @@ Detailed scope lives in @docs/SPEC.md. Scoring rules live in @docs/RUBRIC.md (v0
 
 ## Current status
 <!-- /end-session updates this block. Keep it to 5 lines. -->
-- Phase: P3 Fixer (done) — 101 approved fixes live; store 94.1 → 98.3, Agent-ready 78% → 99.3%, Not ready 11 → 0 (/audit, /review)
-- Last session: 04 — grounded fix proposals, /review (public view, admin passcode, bulk), write-back, before/after
-- Next target: Episode 05 — MCP server (search_products, get_product, check_availability, create_cart → checkout URL)
-- Blockers: none. Order is always sync → audit → propose; 1 pending fix + 15 merchant gaps left in the queue
+- Phase: P4 MCP (done) — public MCP at /api/mcp (4 tools); Claude found the target shoe and returned a working checkout link
+- Last session: 05 — Storefront client, MCP tools + endpoint (Upstash limit, call log), products published to Online Store, spec-drift check (`check:fixes`)
+- Next target: Episode 06 — Eval + demo (40 tasks via MCP tools, messy fixture vs fixed catalog, before/after chart, demo mode)
+- Blockers: none. Pipeline order: sync → audit → propose → review → check:fixes. 15 merchant gaps remain by design
 
 ## Stack
 - Next.js (App Router) + TypeScript + Tailwind + shadcn/ui, deployed on Vercel Hobby
@@ -40,10 +40,12 @@ Detailed scope lives in @docs/SPEC.md. Scoring rules live in @docs/RUBRIC.md (v0
 - `npm run dev` — local app
 - `npm run lint && npm run typecheck` — run before every commit
 - `npm run check:shopify` — smoke test Shopify auth (shop name + product count)
+- `npm run check:storefront` — smoke test the Storefront API (live stock + a throwaway cart/checkout URL)
+- `npm run check:fixes [-- --queue]` — audit every applied fix for spec drift vs the original product text; `--queue` queues corrections for review
 - `npm run db:generate` / `npm run db:migrate` — create / apply Drizzle migrations
 - `npm run create:storefront-token` — one-off; writes `SHOPIFY_STOREFRONT_TOKEN` into `.env.local`
 - `npm run generate:catalog` — regenerate `fixtures/catalog.json` + `fixtures/ground-truth.json` (deterministic)
-- `npm run seed` — push the demo catalog to the Shopify dev store (idempotent; re-run to resume)
+- `npm run seed` — push the demo catalog to the Shopify dev store and publish it to Online Store (idempotent; re-run to resume)
 - `npm run sync` — pull the catalog into Postgres
 - `npm run verify:catalog` — check Shopify/Postgres counts and seeded defects against the ground truth
 - `npm run test:audit` — rule checks vs the ground truth (no model calls)
