@@ -102,3 +102,16 @@ export const fixProposals = pgTable(
       .where(sql`${t.status} in ('pending', 'approved', 'needs_merchant')`),
   ],
 );
+
+/** One row per MCP tool call: what agents ask for, how often it works, how long it takes. */
+export const mcpCalls = pgTable("mcp_calls", {
+  id: serial("id").primaryKey(),
+  tool: text("tool").notNull(),
+  input: jsonb("input").notNull(),
+  ok: boolean("ok").notNull(),
+  error: text("error"),
+  resultCount: integer("result_count"),
+  latencyMs: integer("latency_ms").notNull(),
+  source: text("source").notNull().default("live"), // "live" (the MCP route) or an eval run label
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
