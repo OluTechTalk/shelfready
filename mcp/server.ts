@@ -18,7 +18,9 @@ import {
 const INSTRUCTIONS = `Tools for shopping an outdoor-gear store (boots, jackets, packs, tents, sleeping bags, accessories).
 Typical flow: search_products (use structured filters when the shopper gives them — size, gender, price, waterproof,
 attributes) → get_product for details → check_availability for live stock → create_cart, which returns a Shopify
-checkout URL for the shopper. You never take payment or personal details; the shopper pays on Shopify.`;
+checkout URL for the shopper. Create one cart for the variant the shopper chose; if they haven't picked a size or
+color yet, ask first instead of making a cart per option. You never take payment or personal details; the shopper
+pays on Shopify.`;
 
 const source = postgresSource();
 
@@ -92,7 +94,7 @@ export const mcpHandler = createMcpHandler(
       {
         title: "Create cart",
         description:
-          "Create a cart with the chosen variants and return a Shopify checkout URL to give the shopper. Does not take payment; the shopper completes checkout on Shopify.",
+          "Create a cart with the variants the shopper chose and return a Shopify checkout URL to give them. Call it once the shopper has picked a size and color — ask rather than making a cart per option. Does not take payment; the shopper completes checkout on Shopify.",
         inputSchema: CartInput,
       },
       (args) => logged("create_cart", args, () => createCartTool(source, args)),
