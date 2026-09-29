@@ -145,3 +145,14 @@ export const evalResults = pgTable(
   },
   (t) => [primaryKey({ columns: [t.runId, t.taskId] })],
 );
+
+/**
+ * Recorded playground conversations for demo mode: the exact UI stream chunks of a real
+ * answer to a suggested prompt, replayed when the live model is off, over budget or down.
+ */
+export const playgroundReplays = pgTable("playground_replays", {
+  prompt: text("prompt").primaryKey(), // normalized suggested prompt
+  chunks: jsonb("chunks").notNull(),
+  model: text("model").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
