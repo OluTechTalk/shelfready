@@ -17,11 +17,14 @@ AI shopping assistants are starting to buy on shoppers' behalf. They can only re
 | Catalog agent-readiness (audit score) | 94.1 | **98.3** |
 | Products "Agent-ready" | 78% | **99.3%** |
 | Products "Not ready" | 11 | **0** |
-| Agent shopping eval | _see [/eval](https://shelfready-ashen.vercel.app/eval) — 3-run average in progress_ | |
+| Agent shopping success (60 tasks × 3 runs, Gemini 3.5 Flash-Lite) | 98.9% | **99.4%** |
+| Wrong product bought | 0% | 0% |
+| Tokens per shopping task | 9,773 | **9,370** |
 
 - **105 fixes** approved by a human and applied to Shopify; **2 rejected**; **15 gaps left for the merchant** because the information doesn't exist anywhere in the product data — the fixer refuses to invent it.
 - A spec-drift audit (`npm run check:fixes`) found and corrected 3 fixes where a unit was lost ("30°F" → "30f"), traced to the fixer treating the URL handle as evidence. The handle is now never evidence.
-- **Finding from the eval:** agent-readiness is data *and* the tools agents use. The first run's failures were mostly the search tool (it dropped numbers — "6 person tent" returned the cheapest tents — and silently returned nothing for invented attribute names), on both catalogs. Both are fixed.
+- **Finding from the eval: agent-readiness is data *and* tools.** Fixing the agent-facing search tool moved the first fair run from 92.5–95% to 98–100% on both catalogs (it had dropped numbers — "6 person tent" returned the cheapest tents — and silently returned nothing for invented attribute names). With good tools a capable agent absorbs most catalog mess and never bought a wrong product in 360 sessions; the remaining failures all trace to missing or damaged facts — including one product whose weight is still a merchant gap, where the agent declined rather than guess.
+- **Limitation:** many tasks have 2–4 correct products, so an agent can route around one damaged listing; single-answer tasks would separate the catalogs more sharply. A second model (Groq gpt-oss-120b, free tier) is running in the background and will be added to /eval.
 
 ## How it works
 
