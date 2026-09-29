@@ -13,6 +13,10 @@ import { attributeLabel, formatAttributeValue } from "@/lib/fixer/format";
 import type { ShopifyProduct } from "@/lib/shopify/products";
 import { createCart, variantAvailability } from "@/lib/shopify/storefront";
 import type { ProductSource } from "./source";
+import { REQUIRED_ATTRIBUTES } from "@/lib/audit/rubric";
+
+/** Every structured attribute an agent can filter on, by its display name. */
+const ATTRIBUTE_NAMES = [...new Set(Object.values(REQUIRED_ATTRIBUTES).flatMap((attrs) => attrs.map((a) => attributeLabel(a.key))))];
 
 // ---------------------------------------------------------------------------
 // Shared views
@@ -49,13 +53,27 @@ export const SearchInput = z.object({
   attributes: z
     .record(z.string().max(40), z.string().max(60))
     .optional()
-    .describe("Other structured attributes to match (case-insensitive contains), e.g. {\"Fill type\": \"down\", \"Season rating\": \"3-season\"}."),
+    .describe(
+      `Other structured attributes to match (case-insensitive contains), e.g. {"Fill type": "down", "Season rating": "3-season", "Capacity": "2 people"}. Use these names: ${ATTRIBUTE_NAMES.join(", ")}.`,
+    ),
   limit: z.number().int().min(1).max(10).default(5),
 });
 export type SearchInput = z.infer<typeof SearchInput>;
 
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+/** An attribute name the agent used → the real label, accepting the label or the field key. */
+function resolveAttribute(name: string): string | null {
+  const n = norm(name);
+  for (const attrs of Object.values(REQUIRED_ATTRIBUTES)) {
+    for (const a of attrs) if (norm(a.key) === n || norm(attributeLabel(a.key)) === n) return attributeLabel(a.key);
+  }
+  return null;
+}
+
 function textScore(p: ShopifyProduct, query: string): number {
-  const tokens = query.toLowerCase().split(/[^a-z0-9°']+/).filter((t) => t.length > 1);
+  // Keep numbers ("6 person tent", "30°F"): they're often the whole point of the request.
+  const tokens = query.toLowerCase().split(/[^a-z0-9°']+/).filter((t) => t.length > 1 || /\d/.test(t));
   if (!tokens.length) return 1;
   const fields: [string, number][] = [
     [p.title.toLowerCase(), 3],
@@ -66,13 +84,22 @@ function textScore(p: ShopifyProduct, query: string): number {
   ];
   let score = 0;
   for (const t of tokens) {
-    const stem = t.replace(/(es|s)$/, "");
-    for (const [text, weight] of fields) if (text.includes(stem)) score += weight;
+    // Numbers match as whole numbers: "6" finds "6-Person", not "16" or "650".
+    const matches = /^\d/.test(t)
+      ? (text: string) => new RegExp(`(^|[^0-9.])${t.replace(/[^0-9a-z°]/g, "")}([^0-9]|$)`).test(text)
+      : (text: string) => text.includes(t.replace(/(es|s)$/, ""));
+    for (const [text, weight] of fields) if (matches(text)) score += weight;
   }
   return score;
 }
 
 export async function searchProducts(source: ProductSource, input: SearchInput) {
+  // An unknown attribute name would silently match nothing; say so, with the valid names.
+  const unknown = Object.keys(input.attributes ?? {}).filter((k) => !resolveAttribute(k));
+  if (unknown.length) {
+    return { error: `Unknown attribute name(s): ${unknown.join(", ")}. Use one of: ${ATTRIBUTE_NAMES.join(", ")}.`, total: 0, results: [] };
+  }
+  const wanted = Object.entries(input.attributes ?? {}).map(([k, v]) => [resolveAttribute(k)!, v.toLowerCase()] as const);
   const products = await source.all();
   const want = (s: string) => normalizeOptionValue(s);
   const results = [];
@@ -85,7 +112,7 @@ export async function searchProducts(source: ProductSource, input: SearchInput) 
       if (!ok) continue;
     }
     if (input.waterproof !== undefined && attrs["Waterproof"] !== (input.waterproof ? "Yes" : "No")) continue;
-    if (input.attributes && !Object.entries(input.attributes).every(([k, v]) => (attrs[Object.keys(attrs).find((a) => a.toLowerCase() === k.toLowerCase()) ?? ""] ?? "").toLowerCase().includes(v.toLowerCase()))) continue;
+    if (!wanted.every(([label, v]) => (attrs[label] ?? "").toLowerCase().includes(v))) continue;
 
     // Variants that satisfy size / color / price.
     const variants = p.variants.filter((v) => {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { getBaselineComparison, getLatestAuditRun } from "@/lib/audit/queries";
-import { getEvalPair, listEvalPairs } from "@/lib/eval/queries";
+import { across, getEvalGroup, listEvalGroups } from "@/lib/eval/queries";
 
 const MCP_URL = "https://shelfready-ashen.vercel.app/api/mcp";
 
@@ -30,8 +30,8 @@ export default async function Home() {
   await connection();
   const run = await getLatestAuditRun();
   const audit = run ? await getBaselineComparison(run) : null;
-  const pairs = await listEvalPairs();
-  const evalPair = pairs[0] ? await getEvalPair(pairs[0].label) : null;
+  const groups = await listEvalGroups();
+  const evalGroup = groups[0] ? await getEvalGroup(groups[0].base) : null;
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 py-14">
@@ -58,14 +58,14 @@ export default async function Home() {
         )}
         <Link href="/eval" className="rounded-xl border border-line bg-surface p-5 transition-colors hover:border-accent">
           <p className="text-sm text-muted">Agent shopping success</p>
-          {evalPair ? (
+          {evalGroup ? (
             <>
               <p className="mt-1 flex items-baseline gap-2">
-                <span className="text-2xl font-semibold text-muted">{evalPair.before.summary.successRate}% →</span>
-                <span className="text-4xl font-semibold">{evalPair.after.summary.successRate}%</span>
+                <span className="text-2xl font-semibold text-muted">{across(evalGroup, "before", "successRate").mean}% →</span>
+                <span className="text-4xl font-semibold">{across(evalGroup, "after", "successRate").mean}%</span>
               </p>
               <p className="mt-1 text-sm text-muted">
-                {evalPair.after.summary.tasks} shopping tasks · {evalPair.model}
+                {evalGroup.reps[0].after.summary.tasks} shopping tasks · {evalGroup.model}{evalGroup.reps.length > 1 ? ` · average of ${evalGroup.reps.length} runs` : ""}
               </p>
             </>
           ) : (

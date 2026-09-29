@@ -88,3 +88,52 @@ export async function getEvalPair(label: string): Promise<EvalPair | null> {
     after: { summary: after.summary as EvalSummary, results: toMap(after.id) },
   };
 }
+
+// ---------------------------------------------------------------------------
+// Repeated runs: labels "<base>#1", "<base>#2", … are one experiment run N times.
+// ---------------------------------------------------------------------------
+
+export type EvalGroup = {
+  base: string;
+  model: string;
+  createdAt: Date;
+  reps: EvalPair[];
+};
+
+const baseOf = (label: string) => label.replace(/#\d+$/, "");
+
+/** Experiments (a single run or a set of repeats), newest first. */
+export async function listEvalGroups(): Promise<{ base: string; model: string; createdAt: Date; reps: number }[]> {
+  const pairs = await listEvalPairs();
+  const groups = new Map<string, { base: string; model: string; createdAt: Date; reps: number }>();
+  for (const p of pairs) {
+    const base = baseOf(p.label);
+    const g = groups.get(base) ?? { base, model: p.model, createdAt: p.createdAt, reps: 0 };
+    g.reps++;
+    if (p.createdAt > g.createdAt) g.createdAt = p.createdAt;
+    groups.set(base, g);
+  }
+  return [...groups.values()].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+}
+
+export async function getEvalGroup(base: string): Promise<EvalGroup | null> {
+  const labels = (await listEvalPairs()).map((p) => p.label).filter((l) => baseOf(l) === base).sort();
+  const reps = (await Promise.all(labels.map((l) => getEvalPair(l)))).filter((p): p is EvalPair => p !== null);
+  if (!reps.length) return null;
+  return { base, model: reps[0].model, createdAt: reps[reps.length - 1].createdAt, reps };
+}
+
+type NumericKey = "successRate" | "wrongProductRate" | "wrongVariantRate" | "noCartRate" | "errorRate" | "avgSteps" | "avgToolCalls" | "avgTokens" | "avgLatencyMs";
+
+/** Mean, min and max of a summary field across repeats, for one catalog. */
+export function across(group: EvalGroup, side: "before" | "after", key: NumericKey) {
+  const values = group.reps.map((r) => r[side].summary[key]);
+  const mean = values.reduce((a, b) => a + b, 0) / values.length;
+  return { mean: Math.round(mean * 10) / 10, min: Math.min(...values), max: Math.max(...values) };
+}
+
+/** Mean success rate for one kind of task across repeats. */
+export function acrossKind(group: EvalGroup, side: "before" | "after", kind: keyof EvalSummary["byKind"]) {
+  const values = group.reps.map((r) => r[side].summary.byKind[kind].successRate).filter((v): v is number => v !== null);
+  return values.length ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10 : null;
+}
