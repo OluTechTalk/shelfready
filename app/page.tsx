@@ -95,6 +95,13 @@ export default async function Home() {
           hand you a Shopify checkout link — it never takes payment.
         </p>
         <code className="mt-3 block break-all rounded-lg border border-line bg-surface px-3 py-2 font-mono text-sm">{MCP_URL}</code>
+        <p className="mt-3 text-sm text-muted">
+          No agent handy?{" "}
+          <Link href="/playground" className="font-medium text-accent underline">
+            Try the shopper playground
+          </Link>{" "}
+          — chat with one right here.
+        </p>
       </section>
     </main>
   );

@@ -7,6 +7,7 @@ const LINKS = [
   { href: "/audit", label: "Audit" },
   { href: "/review", label: "Review" },
   { href: "/eval", label: "Eval" },
+  { href: "/playground", label: "Playground" },
   { href: "/status", label: "Status" },
 ];
 

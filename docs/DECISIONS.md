@@ -2,6 +2,12 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-09-29 — Shopper playground: live agent with a budget, recorded replays as the fallback
+- Options: live-only chat (errors when limits hit); canned scripted demo; live with limits and replays of real sessions
+- Chose (limits + real carts: Olu): live Gemini agent over the same MCP tools, real carts; per-IP 10 messages / 10 min and a site-wide 200 messages / day. Over either, in `DEMO_MODE`, or without a limiter, `/api/chat` streams a recorded replay — the exact UI stream of a real answer to a suggested prompt, labeled "Recorded replay".
+- Why: a public page that spends money needs a hard ceiling (~$0.50/day worst case), and visitors should never hit an error page. Replaying real stream chunks renders exactly like a live chat, tool cards included, with no separate "demo" UI to maintain.
+- Trade-offs: replays only exist for the suggested prompts; each replay is checked by a person before it ships — one recorded answer ("warmest down bag") was wrong because search returns the 5 most relevant results, not the extreme, so that prompt was replaced. Superlative questions ("warmest", "lightest") need a sort option in search — open follow-up.
+
 ## 2026-09-28 — Eval runs the tools in-process with recorded carts and catalog-local stock
 - Options: drive the live MCP endpoint over HTTP with real Storefront carts; call the same tool functions in-process with carts recorded and stock read from the catalog being tested
 - Chose (cart stub: Olu): in-process, same tool code and wording as the live server (shared constants), `create_cart` recorded, availability from each catalog's own stock

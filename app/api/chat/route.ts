@@ -42,7 +42,8 @@ const INSTRUCTIONS = `${MCP_INSTRUCTIONS}
 You are the shopping assistant on the ShelfReady demo store, talking with a shopper in a chat.
 Keep replies short and concrete: name products with their price and the details that match the
 request. Ask one question when you need a choice (size, color). When the shopper has chosen,
-check stock and create the cart, then give them the checkout link.`;
+check stock and create the cart. The page shows the cart with a checkout button automatically, so
+don't paste the checkout URL — just confirm what's in the cart.`;
 
 const tools = {
   search_products: tool({ ...TOOL_INFO.search_products, inputSchema: SearchInput, execute: (args) => searchProducts(source, args) }),
@@ -76,7 +77,10 @@ async function replay(prompt: string, reason: Exclude<LiveDecision, { live: true
     : [];
   const meta = { replay: true, reason };
   if (row) {
-    const chunks = (row.chunks as UIMessageChunk[]).map((c) => (c.type === "start" ? { ...c, messageMetadata: meta } : c));
+    // Mark it as a replay; drop the recording's own metadata updates, which would say "live".
+    const chunks = (row.chunks as UIMessageChunk[])
+      .filter((c) => c.type !== "message-metadata")
+      .map((c) => (c.type === "start" || c.type === "finish" ? { ...c, messageMetadata: meta } : c));
     return streamChunks(chunks);
   }
   const text = `${REASON_TEXT[reason]} You can still watch a recorded session — try one of these:\n\n${SUGGESTED_PROMPTS.map((p) => `• ${p}`).join("\n")}`;
