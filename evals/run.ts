@@ -128,9 +128,20 @@ function score(task: Task, carts: Line[][], source: ShopifyProduct[], clean: Map
 }
 
 const brief = (x: unknown) => {
-  const s = JSON.stringify(x);
+  const s = JSON.stringify(x) ?? String(x); // JSON.stringify(undefined) is undefined
   return s.length > 600 ? `${s.slice(0, 600)}…` : s;
 };
+
+/** A tool call's result, or the error it threw (the agent saw that error and carried on). */
+function callOutput(step: { toolResults: { toolCallId: string; output: unknown }[]; content: unknown[] }, toolCallId: string): string {
+  const result = step.toolResults.find((r) => r.toolCallId === toolCallId);
+  if (result) return brief(result.output);
+  const failed = step.content.find(
+    (p): p is { type: "tool-error"; toolCallId: string; error: unknown } =>
+      !!p && typeof p === "object" && (p as { type?: string }).type === "tool-error" && (p as { toolCallId?: string }).toolCallId === toolCallId,
+  );
+  return failed ? `TOOL ERROR: ${failed.error instanceof Error ? failed.error.message : brief(failed.error)}` : "(no result)";
+}
 
 async function runTask(task: Task, source: ProductSource, model: ModelSpec, clean: Map<string, CatalogProduct>): Promise<TaskResult> {
   const t0 = Date.now();
@@ -155,7 +166,7 @@ async function runTask(task: Task, source: ProductSource, model: ModelSpec, clea
         calls: s.toolCalls.map((c) => ({
           tool: c.toolName,
           input: c.input,
-          output: brief(s.toolResults.find((r) => r.toolCallId === c.toolCallId)?.output),
+          output: callOutput(s, c.toolCallId),
         })),
       }));
       return {
@@ -174,7 +185,11 @@ async function runTask(task: Task, source: ProductSource, model: ModelSpec, clea
         backOffForQuota();
         continue;
       }
-      const message = err instanceof Error ? err.message.slice(0, 300) : String(err);
+      // Keep where it failed, not just what: the top stack frames make errors diagnosable later.
+      const message =
+        err instanceof Error
+          ? `${err.message.slice(0, 300)}${err.stack ? ` @ ${err.stack.split("\n").slice(1, 4).map((l) => l.trim()).join(" < ")}` : ""}`
+          : String(err);
       return {
         taskId: task.id,
         outcome: "error",
