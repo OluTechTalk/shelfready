@@ -6,10 +6,10 @@ Detailed scope lives in @docs/SPEC.md. Scoring rules live in @docs/RUBRIC.md (v0
 
 ## Current status
 <!-- /end-session updates this block. Keep it to 5 lines. -->
-- Phase: P4 MCP (done) — public MCP at /api/mcp (4 tools); Claude found the target shoe and returned a working checkout link
-- Last session: 05 — Storefront client, MCP tools + endpoint (Upstash limit, call log), products published to Online Store, spec-drift check (`check:fixes`)
-- Next target: Episode 06 — Eval + demo (40 tasks via MCP tools, messy fixture vs fixed catalog, before/after chart, demo mode)
-- Blockers: none. Pipeline order: sync → audit → propose → review → check:fixes. 15 merchant gaps remain by design
+- Phase: P5 Eval (done) — 60 tasks × 3 runs on Gemini: agent success 98.9% → 99.4%, 0% wrong product; finding: agent-readiness = data + tools
+- Last session: 06 — ground truth + task set, resumable eval runner, /eval, search-tool fixes, UI redesign, README
+- Next target: Episode 07 — Shopper playground + demo mode (public chat agent over the MCP tools, rate-limited, cached fallback)
+- Blockers: none. Groq eval runs free in the background (Task Scheduler, 8 PM, until ~Oct 4) — add it to /eval when done
 
 ## Stack
 - Next.js (App Router) + TypeScript + Tailwind + shadcn/ui, deployed on Vercel Hobby

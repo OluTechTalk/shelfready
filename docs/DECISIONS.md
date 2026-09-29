@@ -2,6 +2,12 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-09-28 — Eval runs the tools in-process with recorded carts and catalog-local stock
+- Options: drive the live MCP endpoint over HTTP with real Storefront carts; call the same tool functions in-process with carts recorded and stock read from the catalog being tested
+- Chose (cart stub: Olu): in-process, same tool code and wording as the live server (shared constants), `create_cart` recorded, availability from each catalog's own stock
+- Why: the "before" catalog doesn't exist in Shopify any more (it's the seed fixture), so both sides must use the same data path; real carts would pollute the store and make runs slower and flakier. Success is judged on what the agent put in the cart, against the true product data.
+- Trade-offs: the eval doesn't exercise HTTP transport, rate limits or live stock — covered separately by the live Claude connector test
+
 ## 2026-09-29 — Gemini is the eval of record; Groq runs free in the background
 - Options: pay for Groq's Developer tier (~$0.20/run); run Groq free over ~5 days; skip the second model
 - Chose (Olu): Gemini 3.5 Flash-Lite (3 runs) is the eval of record; Groq gpt-oss-120b runs free, one resumed session a day (Windows Task Scheduler, 8 PM, 6 days, `scripts/eval-groq-daily.ps1`) and is added to /eval when complete
