@@ -125,6 +125,113 @@ function draftFor(p: CatalogProduct, rng: Rng): Draft | null {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Attribute tier: the deciding fact lives only in one structured attribute.
+// ---------------------------------------------------------------------------
+
+const HARD_COUNTS = { messy: 15, clean: 5 };
+const HARD_KEYS: Record<CatalogProduct["rubricCategory"], string[]> = {
+  footwear: ["width"],
+  apparel: ["weather_rating"],
+  backpacks: ["weight", "frame_type"],
+  tents: ["setup_type", "packed_weight"],
+  sleeping_bags: ["fill_type", "shape", "weight"],
+  accessories: ["material"],
+};
+
+const grams = (raw: string | undefined) => {
+  try {
+    return (JSON.parse(raw ?? "") as { value: number }).value;
+  } catch {
+    return NaN;
+  }
+};
+const an = (word: string) => (/^[aeiou]/i.test(word) ? "an" : "a");
+const packWord = (use: string) =>
+  /daypack/i.test(use) ? ["daypack", "Daypack"] : /multi-day/i.test(use) ? ["backpacking pack", "Multi-day"] : /travel/i.test(use) ? ["travel pack", "Travel"] : ["ultralight pack", "Fastpacking"];
+
+/** A request whose deciding constraint is attribute `key` of product `p` (built from its true value). */
+function hardDraftFor(p: CatalogProduct, key: string, rng: Rng): Draft | null {
+  const value = mf(p, key) ?? "";
+  if (!value) return null;
+  const v = rng.pick(p.variants);
+  const g = genderOf(p);
+  switch (`${p.rubricCategory}.${key}`) {
+    case "footwear.width": {
+      const size = opt(v, "Size");
+      if (!/wide/i.test(value) || !size || !g) return null;
+      return { request: `I need ${who(g)} ${TYPE_WORDS[p.productType]} in a wide width, size ${size}.`, constraints: { productTypes: [p.productType], gender: g, size, attrIncludes: [{ key: "width", text: "Wide" }] } };
+    }
+    case "apparel.weather_rating": {
+      if (!g) return null;
+      const mm = value.match(/\d{2},\d{3} mm/)?.[0];
+      const temp = value.match(/\d+°F/)?.[0];
+      const [phrase, text] = mm ? [`waterproof to ${mm}`, mm] : temp ? [`warm to about ${temp}`, temp] : /DWR/.test(value) ? ["with a water-resistant DWR finish", "DWR"] : [null, null];
+      if (!phrase || !text) return null;
+      return { request: `Looking for a ${who(g)} ${TYPE_WORDS[p.productType]} ${phrase}.`, constraints: { productTypes: [p.productType], gender: g, attrIncludes: [{ key: "weather_rating", text }] } };
+    }
+    case "backpacks.weight": {
+      const w = grams(value);
+      const [word, use] = packWord(mf(p, "use_case") ?? "");
+      if (!w) return null;
+      const cap = Math.ceil((w + 30) / 50) * 50;
+      return { request: `I want ${an(word)} ${word} that weighs under ${cap} grams.`, constraints: { attrIncludes: [{ key: "use_case", text: use }], attrRange: [{ key: "weight", min: 0, max: cap }] } };
+    }
+    case "backpacks.frame_type": {
+      const [word, use] = packWord(mf(p, "use_case") ?? "");
+      const frameless = /frameless/i.test(value);
+      return {
+        request: frameless ? `I want a frameless ${word}.` : `I want ${an(word)} ${word} with an internal frame.`,
+        constraints: { attrIncludes: [{ key: "use_case", text: use }, { key: "frame_type", text: frameless ? "Frameless" : "Internal" }] },
+      };
+    }
+    case "tents.setup_type": {
+      const people = Number(mf(p, "capacity_people"));
+      if (!/^Freestanding dome/.test(value) || !people) return null;
+      return {
+        request: `I need a freestanding dome tent that sleeps ${people === 1 ? "one person" : `${people} people`}.`,
+        constraints: { attrRange: [{ key: "capacity_people", min: people, max: people }], attrIncludes: [{ key: "setup_type", text: "Freestanding dome" }] },
+      };
+    }
+    case "tents.packed_weight": {
+      const people = Number(mf(p, "capacity_people"));
+      const w = grams(value);
+      if (!people || !w) return null;
+      const cap = Math.ceil((w + 100) / 250) * 250;
+      return {
+        request: `I need a tent for ${people === 1 ? "one person" : `${people} people`} with a packed weight under ${(cap / 1000).toFixed(2).replace(/0$/, "")} kg.`,
+        constraints: { attrRange: [{ key: "capacity_people", min: people, max: people }, { key: "packed_weight", min: 0, max: cap }] },
+      };
+    }
+    case "sleeping_bags.fill_type": {
+      const power = value.match(/\d{3}-fill/)?.[0];
+      if (!power) return null;
+      return { request: `I want a sleeping bag with ${power}-power down.`, constraints: { attrIncludes: [{ key: "fill_type", text: power }] } };
+    }
+    case "sleeping_bags.shape": {
+      const temp = (mf(p, "temperature_rating") ?? "").split(" /")[0];
+      if (!temp) return null;
+      return {
+        request: value === "Quilt" ? `I want a sleeping quilt rated to ${temp}.` : `I want a ${value.toLowerCase()}-shaped sleeping bag rated to ${temp}.`,
+        constraints: { attrIncludes: [{ key: "shape", text: value }, { key: "temperature_rating", text: temp }] },
+      };
+    }
+    case "sleeping_bags.weight": {
+      const w = grams(value);
+      const fill = /down/i.test(mf(p, "fill_type") ?? "") ? "down" : "synthetic";
+      if (!w) return null;
+      const cap = Math.ceil((w + 30) / 50) * 50;
+      return { request: `I want a ${fill} sleeping bag that weighs under ${cap} grams.`, constraints: { attrIncludes: [{ key: "fill_type", text: fill }], attrRange: [{ key: "weight", min: 0, max: cap }] } };
+    }
+    case "accessories.material": {
+      const detail = /cork/i.test(value) ? ["trekking poles with cork grips", "cork"] : /vacuum/i.test(value) ? ["a vacuum-insulated water bottle", "vacuum"] : /rib knit/i.test(value) ? ["a rib-knit merino beanie", "rib knit"] : /silicone/i.test(value) ? ["a cook set with silicone handles", "silicone"] : null;
+      if (!detail) return null;
+      return { request: `I'm after ${detail[0]}.`, constraints: { productTypes: [p.productType], attrIncludes: [{ key: "material", text: detail[1] }] } };
+    }
+  }
+  return null;
+}
+
 function main() {
   const root = process.cwd();
   const clean = CatalogSchema.parse(JSON.parse(readFileSync(join(root, "fixtures", "catalog-clean.json"), "utf8"))).products;
@@ -180,9 +287,53 @@ function main() {
     noMatch.push(TaskSchema.parse({ ...t, id: "", request, kind: "no_match", target: null, targetDefects: [], constraints, acceptable: [] }));
   }
 
-  const tasks = [...messy, ...control, ...noMatch].map((t, i) => ({ ...t, id: `T${String(i + 1).padStart(2, "0")}` }));
+  const standard = [...messy, ...control, ...noMatch].map((t, i) => ({ ...t, id: `T${String(i + 1).padStart(2, "0")}` }));
   const total = COUNTS.messy_target + COUNTS.clean_target + COUNTS.no_match;
-  if (tasks.length !== total) throw new Error(`Only ${tasks.length} of ${total} tasks could be generated`);
+  if (standard.length !== total) throw new Error(`Only ${standard.length} of ${total} tasks could be generated`);
+
+  // Attribute tier (own RNG, so the standard tasks above never change).
+  const hardRng = createRng(SEED + 1);
+  const byHandle = new Map(clean.map((p) => [p.handle, p]));
+  const seen = new Set(standard.map((t) => t.request));
+  const hardTask = (p: CatalogProduct, key: string): Task | null => {
+    const d = hardDraftFor(p, key, hardRng);
+    if (!d || seen.has(d.request)) return null;
+    const acceptable = acceptableHandles(clean, d.constraints);
+    if (!acceptable.includes(p.handle) || acceptable.length > MAX_ACCEPTABLE) return null;
+    seen.add(d.request);
+    const targetDefects = defects.get(p.handle) ?? [];
+    return TaskSchema.parse({
+      id: "",
+      request: d.request,
+      kind: targetDefects.length ? "messy_target" : "clean_target",
+      tier: "attribute",
+      target: p.handle,
+      targetDefects,
+      constraints: d.constraints,
+      acceptable,
+    });
+  };
+  // Messy targets: first the exact attribute that was damaged on that product, then other messy products.
+  const damaged = truth.products.flatMap((t) =>
+    [...(t.details.attributesMissing ?? []), ...(t.details.attributesInDescriptionOnly ?? [])].map((a) => ({ handle: t.handle, key: a.key })),
+  );
+  const hardMessy: Task[] = [];
+  const tryAdd = (list: Task[], p: CatalogProduct | undefined, key: string, max: number) => {
+    if (!p || list.length >= max || list.some((t) => t.target === p.handle)) return;
+    const t = hardTask(p, key);
+    if (t) list.push(t);
+  };
+  for (const { handle, key } of hardRng.shuffle(damaged)) tryAdd(hardMessy, byHandle.get(handle), key, HARD_COUNTS.messy);
+  for (const p of hardRng.shuffle(clean.filter((c) => (defects.get(c.handle) ?? []).length))) {
+    for (const key of hardRng.shuffle(HARD_KEYS[p.rubricCategory])) tryAdd(hardMessy, p, key, HARD_COUNTS.messy);
+  }
+  const hardClean: Task[] = [];
+  for (const p of hardRng.shuffle(clean.filter((c) => !(defects.get(c.handle) ?? []).length))) {
+    for (const key of hardRng.shuffle(HARD_KEYS[p.rubricCategory])) tryAdd(hardClean, p, key, HARD_COUNTS.clean);
+  }
+  const hard = [...hardMessy, ...hardClean].map((t, i) => ({ ...t, id: `T${String(standard.length + i + 1).padStart(2, "0")}` }));
+  if (hard.length !== HARD_COUNTS.messy + HARD_COUNTS.clean) throw new Error(`Only ${hard.length} attribute-tier tasks could be generated`);
+  const tasks = [...standard, ...hard];
 
   // Self-check: every task's answers are exactly what the truth matcher says.
   for (const t of tasks) {
@@ -191,7 +342,7 @@ function main() {
   }
 
   writeFileSync(join(root, "evals", "tasks.json"), JSON.stringify({ version: 1, seed: SEED, tasks }, null, 2) + "\n");
-  console.log(`Wrote ${tasks.length} tasks (${messy.length} messy targets, ${control.length} clean, ${noMatch.length} no-match)`);
+  console.log(`Wrote ${tasks.length} tasks: standard ${standard.length} (${messy.length} messy, ${control.length} clean, ${noMatch.length} no-match) + attribute tier ${hard.length} (${hardMessy.length} messy, ${hardClean.length} clean)`);
   for (const t of tasks) console.log(`  ${t.id} [${t.kind}${t.targetDefects.length ? `: ${t.targetDefects.join(",")}` : ""}] ${t.request} → ${t.acceptable.length} answer(s)`);
 }
 

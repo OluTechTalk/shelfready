@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { connection } from "next/server";
 import tasksFile from "@/evals/tasks.json";
 import { getBaselineComparison, getLatestAuditRun } from "@/lib/audit/queries";
-import { across, acrossKind, getEvalGroup, listEvalGroups, type EvalGroup, type EvalTaskRow } from "@/lib/eval/queries";
+import { across, acrossKind, acrossTier, getEvalGroup, listEvalGroups, type EvalGroup, type EvalTaskRow } from "@/lib/eval/queries";
 
 export const metadata: Metadata = { title: "Agent shopping eval · ShelfReady" };
 
@@ -228,7 +228,7 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
         <table className="mt-3 w-full text-sm">
           <thead>
             <tr className="text-left text-muted">
-              <th className="py-1 font-normal">Task</th>
+              <th className="py-1 font-normal">Task type</th>
               <th className="py-1 text-right font-normal">Tasks</th>
               <th className="py-1 text-right font-normal">Before</th>
               <th className="py-1 text-right font-normal">After</th>
@@ -243,6 +243,20 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
                 <td className="py-2 text-right font-medium">{acrossKind(group, "after", k) ?? "—"}%</td>
               </tr>
             ))}
+            {(["standard", "attribute"] as const).map((tier) => {
+              const tierTasks = tasks.filter((t) => ((t as { tier?: string }).tier ?? "standard") === tier).length;
+              const b = acrossTier(group, "before", tier);
+              const a = acrossTier(group, "after", tier);
+              if (!tierTasks || (b === null && a === null)) return null;
+              return (
+                <tr key={tier} className="border-t border-line">
+                  <td className="py-2">{tier === "standard" ? "Standard requests" : "Deciding fact only in a structured attribute"}</td>
+                  <td className="py-2 text-right">{tierTasks}</td>
+                  <td className="py-2 text-right">{b ?? "—"}%</td>
+                  <td className="py-2 text-right font-medium">{a ?? "—"}%</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </section>

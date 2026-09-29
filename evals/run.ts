@@ -210,6 +210,10 @@ function summarize(results: TaskResult[], tasks: Task[]) {
   const rate = (o: Outcome) => Math.round((results.filter((r) => r.outcome === o).length / n) * 1000) / 10;
   const avg = (f: (r: TaskResult) => number) => Math.round((results.reduce((a, r) => a + f(r), 0) / n) * 10) / 10;
   const kinds = ["messy_target", "clean_target", "no_match"] as const;
+  const successIn = (ids: Set<string>) => {
+    const group = results.filter((r) => ids.has(r.taskId));
+    return { tasks: group.length, successRate: group.length ? Math.round((group.filter((r) => r.success).length / group.length) * 1000) / 10 : null };
+  };
   return {
     tasks: results.length,
     successRate: rate("success"),
@@ -221,12 +225,9 @@ function summarize(results: TaskResult[], tasks: Task[]) {
     avgToolCalls: avg((r) => r.toolCalls),
     avgTokens: avg((r) => r.tokensIn + r.tokensOut),
     avgLatencyMs: avg((r) => r.latencyMs),
-    byKind: Object.fromEntries(
-      kinds.map((k) => {
-        const ids = new Set(tasks.filter((t) => t.kind === k).map((t) => t.id));
-        const group = results.filter((r) => ids.has(r.taskId));
-        return [k, { tasks: group.length, successRate: group.length ? Math.round((group.filter((r) => r.success).length / group.length) * 1000) / 10 : null }];
-      }),
+    byKind: Object.fromEntries(kinds.map((k) => [k, successIn(new Set(tasks.filter((t) => t.kind === k).map((t) => t.id)))])),
+    byTier: Object.fromEntries(
+      (["standard", "attribute"] as const).map((tier) => [tier, successIn(new Set(tasks.filter((t) => t.tier === tier).map((t) => t.id)))]),
     ),
   };
 }
@@ -242,10 +243,9 @@ async function main() {
   const label = arg("label") ?? `${new Date().toISOString().slice(0, 10)}-${model.id.replace(/[^a-z0-9.-]/gi, "_")}`;
 
   const root = process.cwd();
-  const tasks = z
-    .array(TaskSchema)
-    .parse(JSON.parse(readFileSync(join(root, "evals", "tasks.json"), "utf8")).tasks)
-    .filter((t) => !only || only.includes(t.id));
+  // Summaries always cover the whole task file; --tasks only limits what runs now.
+  const allTasks = z.array(TaskSchema).parse(JSON.parse(readFileSync(join(root, "evals", "tasks.json"), "utf8")).tasks);
+  const tasks = allTasks.filter((t) => !only || only.includes(t.id));
   const clean = new Map(CatalogSchema.parse(JSON.parse(readFileSync(join(root, "fixtures", "catalog-clean.json"), "utf8"))).products.map((p) => [p.handle, p]));
 
   const db = getDb();
@@ -313,7 +313,7 @@ async function main() {
       const results = (await db.select().from(schema.evalResults).where(eq(schema.evalResults.runId, run.id)))
         .map((r) => ({ ...r, outcome: r.outcome as Outcome, transcript: r.transcript as TaskResult["transcript"] }))
         .sort((a, b) => a.taskId.localeCompare(b.taskId));
-      const summary = summarize(results, tasks);
+      const summary = summarize(results, allTasks);
       await db.update(schema.evalRuns).set({ summary }).where(eq(schema.evalRuns.id, run.id));
 
       mkdirSync(join(root, "evals", "results"), { recursive: true });

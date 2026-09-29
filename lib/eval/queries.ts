@@ -15,6 +15,7 @@ export type EvalSummary = {
   avgTokens: number;
   avgLatencyMs: number;
   byKind: Record<"messy_target" | "clean_target" | "no_match", { tasks: number; successRate: number | null }>;
+  byTier?: Record<"standard" | "attribute", { tasks: number; successRate: number | null }>;
 };
 
 export type EvalTaskRow = {
@@ -135,5 +136,11 @@ export function across(group: EvalGroup, side: "before" | "after", key: NumericK
 /** Mean success rate for one kind of task across repeats. */
 export function acrossKind(group: EvalGroup, side: "before" | "after", kind: keyof EvalSummary["byKind"]) {
   const values = group.reps.map((r) => r[side].summary.byKind[kind].successRate).filter((v): v is number => v !== null);
+  return values.length ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10 : null;
+}
+
+/** Mean success rate for one task tier across repeats (older runs have no tiers). */
+export function acrossTier(group: EvalGroup, side: "before" | "after", tier: "standard" | "attribute") {
+  const values = group.reps.map((r) => r[side].summary.byTier?.[tier]?.successRate).filter((v): v is number => typeof v === "number");
   return values.length ? Math.round((values.reduce((a, b) => a + b, 0) / values.length) * 10) / 10 : null;
 }

@@ -22,6 +22,9 @@ export const TaskSchema = z.object({
   id: z.string(),
   request: z.string(),
   kind: z.enum(["messy_target", "clean_target", "no_match"]),
+  // standard: facts a title or description usually carries; attribute: the deciding fact lives
+  // only in a structured attribute (weight, fill, width…) — where messy data should hurt most.
+  tier: z.enum(["standard", "attribute"]).default("standard"),
   target: z.string().nullable(), // the product the task was written around
   targetDefects: z.array(z.string()),
   constraints: ConstraintsSchema,
@@ -31,6 +34,18 @@ export type Task = z.infer<typeof TaskSchema>;
 
 const mf = (p: CatalogProduct, key: string) => p.metafields.find((m) => m.key === key)?.value;
 const opt = (v: CatalogProduct["variants"][number], name: string) => v.optionValues.find((o) => o.optionName === name)?.name;
+
+/** A numeric attribute; weights are stored as {"value":771,"unit":"GRAMS"} → grams. */
+export function numericValue(raw: string | undefined): number {
+  if (!raw) return NaN;
+  try {
+    const j = JSON.parse(raw) as { value?: number };
+    if (typeof j === "object" && j && typeof j.value === "number") return j.value;
+  } catch {
+    // not JSON
+  }
+  return Number(raw);
+}
 
 export function genderOf(p: CatalogProduct): "mens" | "womens" | null {
   const g = (mf(p, "gender_fit") ?? "").toLowerCase();
@@ -53,7 +68,7 @@ export function truthMatches(p: CatalogProduct, c: Constraints): boolean {
   if (c.waterproof !== undefined && mf(p, "waterproof") !== String(c.waterproof)) return false;
   for (const a of c.attrIncludes ?? []) if (!(mf(p, a.key) ?? "").toLowerCase().includes(a.text.toLowerCase())) return false;
   for (const r of c.attrRange ?? []) {
-    const n = Number(mf(p, r.key));
+    const n = numericValue(mf(p, r.key));
     if (!(n >= r.min && n <= r.max)) return false;
   }
   return matchingVariants(p, c).length > 0;
