@@ -2,6 +2,24 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-09-29 — Fix the agent-facing search tool, not just the data
+- Options: treat the eval as a pure data test and leave the tools alone; fix tool weaknesses the first run exposed
+- Chose: fix them — text search keeps numbers and matches them as whole numbers; attribute filters accept a label or field key; an unknown attribute name returns the valid names instead of zero results; the names are listed in the tool schema
+- Why: the first fair Gemini run (before 95% → after 92.5%) failed mostly on tool behavior, on both catalogs: "6 person tent" dropped the "6" and returned the cheapest tents; invented attribute names ("Sensing", "readyState") silently matched nothing. Agent-readiness is data *and* the interface agents use — the finding for the case study.
+- Trade-offs: the tools changed mid-eval, so every earlier run was discarded; before and after always use the same tool version
+
+## 2026-09-29 — Repeat each eval 3× and report the spread
+- Options: one run per catalog; N repeats with mean and min–max
+- Chose: 3 repeats (`--repeat 3`), averaged on /eval with the range and per-task pass counts
+- Why: at 40 tasks one task is 2.5 points, and the same model varies run to run even at temperature 0 — a single run can't tell a real gap from noise
+- Trade-offs: 3× the cost (~$0.75 on Gemini paid tier) and time
+
+## 2026-09-28 — Gemini on the paid tier
+- Options: wait out free-tier outages; move to paid (Olu added $5 credit)
+- Chose: paid ($0.30 / 1M input, $2.50 / 1M output for 3.5 Flash-Lite), prices recorded in `lib/ai/models.ts` so `model_calls` logs real cost
+- Why: the free tier returned "high demand" errors and 115 s calls for hours; paid calls went through immediately. A full before/after run costs about $0.25.
+- Trade-offs: runs now cost money (small); Groq stays free as the second model
+
 ## 2026-09-28 — Compact MCP tool results; eval on free tiers only
 - Options: pay for Groq's Developer tier; spread free Groq runs over ~4 days; shrink what each tool returns and run Gemini (main model) when its outage clears
 - Chose (Olu): shrink tool results — search returns 5 products by default (max 10) with up to 3 matching variants; `get_product` variants are id + title + price. All structured attributes stay.
