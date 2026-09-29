@@ -2,6 +2,12 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-09-29 — Gemini is the eval of record; Groq runs free in the background
+- Options: pay for Groq's Developer tier (~$0.20/run); run Groq free over ~5 days; skip the second model
+- Chose (Olu): Gemini 3.5 Flash-Lite (3 runs) is the eval of record; Groq gpt-oss-120b runs free, one resumed session a day (Windows Task Scheduler, 8 PM, 6 days, `scripts/eval-groq-daily.ps1`) and is added to /eval when complete
+- Why: a second model shouldn't block the next episodes, and the resumable runner plus circuit breaker make a quota-limited daily run safe
+- Trade-offs: Groq results arrive at the end of the week and cover one run, not three; the laptop has to be on at 8 PM
+
 ## 2026-09-29 — Fix the agent-facing search tool, not just the data
 - Options: treat the eval as a pure data test and leave the tools alone; fix tool weaknesses the first run exposed
 - Chose: fix them — text search keeps numbers and matches them as whole numbers; attribute filters accept a label or field key; an unknown attribute name returns the valid names instead of zero results; the names are listed in the tool schema
