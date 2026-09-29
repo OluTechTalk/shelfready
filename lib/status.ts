@@ -54,6 +54,15 @@ export function runStatusChecks(): Promise<CheckResult[]> {
       if (!body.data?.products.nodes.length) throw new Error("no products visible — publish them to the Online Store channel (npm run seed)");
       return "products visible to shoppers";
     }),
+    run("Upstash Redis (rate limits)", async () => {
+      // Without it the MCP server isn't rate-limited and the playground serves replays only.
+      const url = process.env.UPSTASH_REDIS_REST_URL;
+      const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+      if (!url || !token) throw new Error("not configured — MCP unthrottled, playground replay-only");
+      const res = await fetch(`${url}/ping`, { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(5000), cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      return "connected · rate limits active";
+    }),
     run("Gemini API key", () =>
       checkModelKey("GOOGLE_GENERATIVE_AI_API_KEY", "https://generativelanguage.googleapis.com/v1beta/models", (key) => ({
         "x-goog-api-key": key, // header, not ?key=, so the key never appears in a URL or error
