@@ -25,11 +25,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="flex min-h-full flex-col">
         <header className="sticky top-0 z-20 border-b border-line bg-background/85 backdrop-blur">
           <div className="mx-auto flex h-14 w-full max-w-3xl items-center justify-between gap-4 px-4">
-            <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
+            <Link href="/" className="flex shrink-0 items-center gap-2 font-semibold tracking-tight">
               <span aria-hidden className="inline-flex size-6 items-center justify-center rounded-md bg-accent text-xs font-bold text-white">
                 S
               </span>
-              ShelfReady
+              <span className="hidden sm:inline">ShelfReady</span>
             </Link>
             <NavLinks />
           </div>

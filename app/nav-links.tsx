@@ -8,13 +8,14 @@ const LINKS = [
   { href: "/review", label: "Review" },
   { href: "/eval", label: "Eval" },
   { href: "/playground", label: "Playground" },
+  { href: "/case-study", label: "Case study" },
   { href: "/status", label: "Status" },
 ];
 
 export function NavLinks() {
   const pathname = usePathname();
   return (
-    <nav aria-label="Main" className="flex items-center gap-1 text-sm">
+    <nav aria-label="Main" className="-mr-2 flex min-w-0 items-center gap-1 overflow-x-auto whitespace-nowrap pr-2 text-sm">
       {LINKS.map((l) => {
         const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
         return (

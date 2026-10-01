@@ -65,7 +65,7 @@ All model calls are logged with tokens and cost. The free tiers carried the buil
 
 ## What I'd do next
 
-- **Sort and ranges in search** — "warmest", "lightest", "cheapest" are unreliable when search returns top matches, not extremes (found when a recorded demo answer was wrong and pulled).
+- **Range filters in search** — a recorded demo answer called 20°F bags the warmest because search returned top matches, not extremes; a `sort` option (cheapest, lightest, warmest, largest) now fixes superlatives. Numeric ranges ("under 1 kg", "at least 30 L") are next.
 - **Single-answer eval tasks** — many tasks had 2–4 correct products, so an agent could route around one damaged listing; sharper tasks would separate the catalogs more.
 - **A merchant input step** for the 15 gaps the fixer refused to invent.
 - **A second model in the eval** — Groq gpt-oss-120b is running on the free tier and will be added to `/eval`.
