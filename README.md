@@ -47,7 +47,7 @@ Shopify dev store ──sync──▶ Postgres (products, raw JSON + content has
 - **MCP** (`mcp/`): compact, structured tool results; public, rate-limited (Upstash, 60 req/min/IP); every call logged.
 - **Eval** (`evals/`): 40 shopper requests generated from ground truth (25 aimed at seeded-messy products, 10 clean controls, 5 where nothing fits), an AI SDK agent loop over the same tools, scored against the true product data; resumable, repeated runs.
 
-Key decisions and their trade-offs are logged in [`docs/DECISIONS.md`](docs/DECISIONS.md); each build session in [`docs/sessions/`](docs/sessions/).
+**Case study:** [`docs/CASE_STUDY.md`](docs/CASE_STUDY.md). Key decisions and their trade-offs are logged in [`docs/DECISIONS.md`](docs/DECISIONS.md); each build session in [`docs/sessions/`](docs/sessions/).
 
 ## Stack
 
