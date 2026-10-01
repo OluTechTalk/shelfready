@@ -81,7 +81,7 @@ function RateBars({ group }: { group: EvalGroup }) {
                     <div aria-hidden className="absolute top-1/2 h-px -translate-y-1/2 bg-foreground/60" style={{ left: `${v.min}%`, width: `${v.max - v.min}%` }} />
                   )}
                 </div>
-                <span className="w-24 text-right text-sm tabular-nums">{pct(v, group.reps.length)}</span>
+                <span className="w-36 whitespace-nowrap text-right text-sm tabular-nums">{pct(v, group.reps.length)}</span>
               </div>
             );
           })}

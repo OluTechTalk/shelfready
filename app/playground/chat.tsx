@@ -64,7 +64,7 @@ function ToolCard({ part }: { part: ToolPart }) {
   if (part.state === "output-error") return <div className={box}>Tool error: {part.errorText}</div>;
 
   if (name === "search_products") {
-    const filters = Object.entries(part.input ?? {}).filter(([k, v]) => k !== "limit" && v !== undefined);
+    const filters = Object.entries(part.input ?? {}).filter(([k, v]) => k !== "limit" && v !== undefined && !(k === "sort" && v === "relevance"));
     const results = (out.results as { title: string; price: { min: number; max: number }; attributes: Record<string, string>; matchingVariants: { title: string; inStock: boolean }[] }[]) ?? [];
     return (
       <div className={box}>

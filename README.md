@@ -7,8 +7,16 @@ AI shopping assistants are starting to buy on shoppers' behalf. They can only re
 3. **Open the store to agents** — an MCP server lets Claude or any MCP client search the catalog, check live stock and hand the shopper a Shopify checkout link. It never takes payment.
 4. **Measure** — the same shopping tasks run by an AI agent on the messy catalog and the fixed one.
 
-**Live demo:** https://shelfready-ashen.vercel.app — [Audit](https://shelfready-ashen.vercel.app/audit) · [Review queue](https://shelfready-ashen.vercel.app/review) · [Eval](https://shelfready-ashen.vercel.app/eval) · [Status](https://shelfready-ashen.vercel.app/status)
+**Live demo:** https://shelfready-ashen.vercel.app — [Playground](https://shelfready-ashen.vercel.app/playground) · [Audit](https://shelfready-ashen.vercel.app/audit) · [Review queue](https://shelfready-ashen.vercel.app/review) · [Eval](https://shelfready-ashen.vercel.app/eval) · [Case study](https://shelfready-ashen.vercel.app/case-study) · [Status](https://shelfready-ashen.vercel.app/status)
 **MCP server:** `https://shelfready-ashen.vercel.app/api/mcp` — add it to Claude (Settings → Connectors → Add custom connector) and ask for gear.
+
+![An AI agent answering "warmest down sleeping bag" through the store's MCP tools, with a sort filter and live product cards](docs/images/playground.png)
+
+<table><tr>
+<td><img src="docs/images/audit.png" alt="Audit: catalog readiness score and per-product bands"></td>
+<td><img src="docs/images/review.png" alt="Review queue: proposed fixes per product, approved by a person"></td>
+<td><img src="docs/images/eval.png" alt="Eval: agent success before and after the fixes"></td>
+</tr><tr><td align="center">Audit</td><td align="center">Review queue</td><td align="center">Eval</td></tr></table>
 
 ## Results
 
