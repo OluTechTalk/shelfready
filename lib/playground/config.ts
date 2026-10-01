@@ -7,7 +7,7 @@ import { Redis } from "@upstash/redis";
 export const SUGGESTED_PROMPTS = [
   "Find me waterproof hiking boots in men's size 10 under $200.",
   "I need a 3-season tent that sleeps 2 people. What do you recommend?",
-  "I need a down sleeping bag rated to 0°F. What are my options?",
+  "What's the warmest down sleeping bag you have, and how much does it weigh?",
   "I want a daypack around 25 liters for day hikes, under $100.",
 ] as const;
 

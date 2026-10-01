@@ -9,7 +9,7 @@
 import { z } from "zod";
 import { htmlToText, normalizeOptionValue } from "@/lib/catalog/defects";
 import { METAFIELD_NAMESPACE } from "@/lib/catalog/schema";
-import { attributeLabel, formatAttributeValue } from "@/lib/fixer/format";
+import { attributeLabel, formatAttributeValue, weightGrams } from "@/lib/fixer/format";
 import type { ShopifyProduct } from "@/lib/shopify/products";
 import { createCart, variantAvailability } from "@/lib/shopify/storefront";
 import type { ProductSource } from "./source";
@@ -56,6 +56,12 @@ export const SearchInput = z.object({
     .describe(
       `Other structured attributes to match (case-insensitive contains), e.g. {"Fill type": "down", "Season rating": "3-season", "Capacity": "2 people"}. Use these names: ${ATTRIBUTE_NAMES.join(", ")}.`,
     ),
+  sort: z
+    .enum(["relevance", "price_low", "price_high", "lightest", "warmest", "largest"])
+    .default("relevance")
+    .describe(
+      "Order of results. Use it for superlatives: cheapest → price_low, most expensive → price_high, lightest → lightest (weight or packed weight), warmest → warmest (sleeping bag temperature rating), biggest → largest (liters or people). Products without that value come last.",
+    ),
   limit: z.number().int().min(1).max(10).default(5),
 });
 export type SearchInput = z.infer<typeof SearchInput>;
@@ -93,6 +99,28 @@ function textScore(p: ShopifyProduct, query: string): number {
   return score;
 }
 
+const minPrice = (variants: ShopifyProduct["variants"]) => Math.min(...variants.map((v) => Number(v.price)));
+const metafield = (p: ShopifyProduct, key: string) => p.metafields.find((m) => m.namespace === METAFIELD_NAMESPACE && m.key === key)?.value;
+const numberIn = (raw: string | undefined) => {
+  const n = Number(raw?.match(/-?\d+(?:\.\d+)?/)?.[0]);
+  return Number.isFinite(n) ? n : null;
+};
+
+/** Sort keys, ascending (so "largest" and "price_high" negate). null = the product doesn't state it. */
+const SORT_KEYS: Record<Exclude<SearchInput["sort"], "relevance">, (p: ShopifyProduct, variants: ShopifyProduct["variants"]) => number | null> = {
+  price_low: (_p, v) => minPrice(v),
+  price_high: (_p, v) => -minPrice(v),
+  lightest: (p) => {
+    const raw = metafield(p, "weight") ?? metafield(p, "packed_weight");
+    return raw ? weightGrams(raw) : null;
+  },
+  warmest: (p) => numberIn(metafield(p, "temperature_rating")), // °F lower limit: lower is warmer
+  largest: (p) => {
+    const n = numberIn(metafield(p, "capacity_l") ?? metafield(p, "capacity_people"));
+    return n === null ? null : -n;
+  },
+};
+
 export async function searchProducts(source: ProductSource, input: SearchInput) {
   // An unknown attribute name would silently match nothing; say so, with the valid names.
   const unknown = Object.keys(input.attributes ?? {}).filter((k) => !resolveAttribute(k));
@@ -102,7 +130,7 @@ export async function searchProducts(source: ProductSource, input: SearchInput) 
   const wanted = Object.entries(input.attributes ?? {}).map(([k, v]) => [resolveAttribute(k)!, v.toLowerCase()] as const);
   const products = await source.all();
   const want = (s: string) => normalizeOptionValue(s);
-  const results = [];
+  const results: { p: ShopifyProduct; variants: ShopifyProduct["variants"]; score: number }[] = [];
   for (const p of products) {
     const attrs = attributes(p);
     if (input.productType && p.productType.toLowerCase() !== input.productType.toLowerCase()) continue;
@@ -129,7 +157,18 @@ export async function searchProducts(source: ProductSource, input: SearchInput) 
     if (score === 0) continue;
     results.push({ p, variants, score });
   }
-  results.sort((a, b) => b.score - a.score || Number(a.variants[0].price) - Number(b.variants[0].price));
+  const byRelevance = (a: (typeof results)[number], b: (typeof results)[number]) => b.score - a.score || minPrice(a.variants) - minPrice(b.variants);
+  if (input.sort === "relevance") results.sort(byRelevance);
+  else {
+    // Missing values sort last, so a listing without the fact can't win a superlative by accident.
+    const key = SORT_KEYS[input.sort];
+    results.sort((a, b) => {
+      const ka = key(a.p, a.variants);
+      const kb = key(b.p, b.variants);
+      if (ka === null || kb === null) return ka === null && kb === null ? byRelevance(a, b) : ka === null ? 1 : -1;
+      return ka - kb || byRelevance(a, b);
+    });
+  }
   return {
     total: results.length,
     results: results.slice(0, input.limit).map(({ p, variants }) => ({
