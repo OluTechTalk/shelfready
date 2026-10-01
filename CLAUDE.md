@@ -6,10 +6,10 @@ Detailed scope lives in @docs/SPEC.md. Scoring rules live in @docs/RUBRIC.md (v0
 
 ## Current status
 <!-- /end-session updates this block. Keep it to 5 lines. -->
-- Phase: P5 Eval (done) — 60 tasks × 3 runs on Gemini: agent success 98.9% → 99.4%, 0% wrong product; finding: agent-readiness = data + tools
-- Last session: 06 — ground truth + task set, resumable eval runner, /eval, search-tool fixes, UI redesign, README
-- Next target: Episode 07 — Shopper playground + demo mode (public chat agent over the MCP tools, rate-limited, cached fallback)
-- Blockers: none. Groq eval runs free in the background (Task Scheduler, 8 PM, until ~Oct 4) — add it to /eval when done
+- Phase: P5 Eval + demo (done) — /eval (98.9% → 99.4%) and a live /playground agent (rate-limited, 200 msgs/day, replay fallback)
+- Last session: 07 — playground chat API + UI, demo-mode replays of real sessions, Upstash check on /status
+- Next target: Episode 08 — P6 Ship (case study, Loom walkthrough, launch post); add Groq to /eval when done
+- Blockers: none. Groq eval finishing in the background (~Oct 3, needs VPN off at 8 PM). Follow-ups: search sort option; MCP fail-closed?
 
 ## Stack
 - Next.js (App Router) + TypeScript + Tailwind + shadcn/ui, deployed on Vercel Hobby
