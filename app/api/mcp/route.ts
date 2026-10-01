@@ -10,7 +10,7 @@ export const maxDuration = 30;
 
 const MAX_BODY_BYTES = 64 * 1024;
 
-// 60 requests per minute per IP. Without Upstash configured (local dev), requests pass.
+// 60 requests per minute per IP. Without Upstash: refused in production, allowed in local dev.
 const limiter =
   process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
     ? new Ratelimit({ redis: Redis.fromEnv(), limiter: Ratelimit.slidingWindow(60, "1 m"), prefix: "shelfready:mcp" })
@@ -27,11 +27,15 @@ function jsonError(status: number, message: string, headers: Record<string, stri
 
 async function handle(req: Request): Promise<Response> {
   if (Number(req.headers.get("content-length") ?? 0) > MAX_BODY_BYTES) return jsonError(413, "Request too large");
-  if (limiter) {
-    const { success, reset } = await limiter.limit(clientIp(req));
-    if (!success) {
-      return jsonError(429, "Rate limit exceeded — try again shortly", { "Retry-After": String(Math.max(1, Math.ceil((reset - Date.now()) / 1000))) });
-    }
+  // Public routes must be rate-limited: in production, no limiter means no service (fail closed).
+  // Local dev without Upstash still works.
+  if (!limiter) {
+    if (process.env.NODE_ENV === "production") return jsonError(503, "Temporarily unavailable — rate limiting is not configured");
+    return mcpHandler(req);
+  }
+  const { success, reset } = await limiter.limit(clientIp(req));
+  if (!success) {
+    return jsonError(429, "Rate limit exceeded — try again shortly", { "Retry-After": String(Math.max(1, Math.ceil((reset - Date.now()) / 1000))) });
   }
   return mcpHandler(req);
 }

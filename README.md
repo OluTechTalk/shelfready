@@ -78,3 +78,7 @@ The full command list is in [`CLAUDE.md`](CLAUDE.md). Pipeline order is always *
 - The MCP server never handles payment or customer data — `create_cart` returns a Shopify checkout URL and stops.
 - Model output that becomes data is structured (Zod) and checked against the source text in code.
 - Secrets live only in `.env.local` and Vercel environment variables.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

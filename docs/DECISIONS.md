@@ -2,6 +2,12 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-09-30 — MCP route fails closed without a rate limiter; MIT license
+- Options (MCP): fail open (agents keep working if Upstash is down, unthrottled meanwhile); fail closed in production (503)
+- Chose (Olu): fail closed in production, open in local dev — matching the playground and the rule that public routes are rate-limited
+- Why: production ran unthrottled for a while because the Upstash keys were missing from Vercel and nothing said so; a refused request is visible, an unthrottled endpoint isn't
+- Also chose (Olu): MIT license for the public repo; history scanned clean of secrets before going public
+
 ## 2026-09-29 — Shopper playground: live agent with a budget, recorded replays as the fallback
 - Options: live-only chat (errors when limits hit); canned scripted demo; live with limits and replays of real sessions
 - Chose (limits + real carts: Olu): live Gemini agent over the same MCP tools, real carts; per-IP 10 messages / 10 min and a site-wide 200 messages / day. Over either, in `DEMO_MODE`, or without a limiter, `/api/chat` streams a recorded replay — the exact UI stream of a real answer to a suggested prompt, labeled "Recorded replay".
