@@ -46,14 +46,15 @@ Shopify dev store ──sync──▶ Postgres (products, raw JSON + content has
       └──── Storefront API ◀── MCP server /api/mcp: search_products · get_product ·
                                 check_availability · create_cart (checkout URL, no payment)
                                          ▲
-                     AI agents (Claude, eval runner on Gemini / Groq)
+          AI agents (Claude, /playground chat, eval runner on Gemini / Groq)
 ```
 
 - **Audit** (`lib/audit/`): rubric v1 in [`docs/RUBRIC.md`](docs/RUBRIC.md). One structured model call per product, cached by content hash, so re-audits only pay for what changed. A band gate stops strong scores elsewhere hiding a fatal gap.
 - **Fixer** (`lib/fixer/`): rule fixes (option names, SKUs, alt text, taxonomy borrowed from the most similar product) and model fixes (attribute extraction, titles, descriptions). Every model fix is checked in code: attribute values need a verbatim quote, title words and numbers must exist in the product's own text, specs must keep their units.
 - **Review** (`/review`): anyone can view; approve / edit / reject / apply need an admin passcode (HMAC-signed session, re-checked in every server action). Per-field conflict checks; each change records its own result.
-- **MCP** (`mcp/`): compact, structured tool results; public, rate-limited (Upstash, 60 req/min/IP); every call logged.
-- **Eval** (`evals/`): 40 shopper requests generated from ground truth (25 aimed at seeded-messy products, 10 clean controls, 5 where nothing fits), an AI SDK agent loop over the same tools, scored against the true product data; resumable, repeated runs.
+- **MCP** (`mcp/`): compact, structured tool results; search filters on structured attributes and sorts for superlatives (cheapest, lightest, warmest, largest). Public, rate-limited (Upstash, 60 req/min/IP, refuses requests if no limiter is configured); every call logged.
+- **Playground** (`/playground`): a public chat agent that shops through the same tools and shows each step. Rate-limited per IP and capped at 200 live messages a day (≈ $0.50); over the limit it plays back recorded real sessions instead of failing.
+- **Eval** (`evals/`): 60 shopper requests generated from ground truth (25 aimed at seeded-messy products, 10 clean controls, 5 where nothing fits, 20 where the deciding fact lives only in a structured attribute), an AI SDK agent loop over the same tools, scored against the true product data; resumable, repeated runs.
 
 **Case study:** [`docs/CASE_STUDY.md`](docs/CASE_STUDY.md). Key decisions and their trade-offs are logged in [`docs/DECISIONS.md`](docs/DECISIONS.md); each build session in [`docs/sessions/`](docs/sessions/).
 
