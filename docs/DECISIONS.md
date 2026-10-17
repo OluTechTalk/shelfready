@@ -2,6 +2,14 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-10-17 — Search sort ranks missing values last; Groq eval made observable
+- Options (sort): treat a missing value as 0 / infinity; drop products without it; rank them last
+- Chose: rank them last (still listed, never first)
+- Why: a messy listing with no weight must not win "lightest" by accident, but the shopper should still see it exists. Same principle as the fixer: an absent fact is never a guess.
+- Options (Groq): drop the second-model comparison; keep the nightly free-tier runs but make failures visible
+- Chose (Olu): finish it. The nightly task now logs inside the repo (git-ignored), writes a one-line summary per night, wakes the laptop and catches up if 8 PM was missed.
+- Why: three nights (Oct 2–4) reported success while adding no results, and the only log was in %TEMP%. A background job you can't observe is worse than no job.
+
 ## 2026-09-30 — MCP route fails closed without a rate limiter; MIT license
 - Options (MCP): fail open (agents keep working if Upstash is down, unthrottled meanwhile); fail closed in production (503)
 - Chose (Olu): fail closed in production, open in local dev — matching the playground and the rule that public routes are rate-limited

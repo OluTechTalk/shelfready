@@ -6,10 +6,10 @@ Detailed scope lives in @docs/SPEC.md. Scoring rules live in @docs/RUBRIC.md (v0
 
 ## Current status
 <!-- /end-session updates this block. Keep it to 5 lines. -->
-- Phase: P5 Eval + demo (done) — /eval (98.9% → 99.4%) and a live /playground agent (rate-limited, 200 msgs/day, replay fallback)
-- Last session: 07 — playground chat API + UI, demo-mode replays of real sessions, Upstash check on /status
-- Next target: Episode 08 — P6 Ship (case study, Loom walkthrough, launch post); add Groq to /eval when done
-- Blockers: none. Groq eval finishing in the background (~Oct 3, needs VPN off at 8 PM). Follow-ups: search sort option; MCP fail-closed?
+- Phase: P6 Ship (mostly done) — live demo, public repo, case study (+ /case-study), README screenshots, launch kit
+- Last session: 08 — public-ready repo, case study, search sort, launch drafts; Loom deferred by Olu
+- Next target: Episode 09 — finish the Groq comparison (nightly 8 PM, VPN off), add it to /eval + case study, close P6
+- Blockers: none. Groq log: evals/logs/groq-summary.log (one line per night). Register task: scripts/register-groq-task.ps1
 
 ## Stack
 - Next.js (App Router) + TypeScript + Tailwind + shadcn/ui, deployed on Vercel Hobby
