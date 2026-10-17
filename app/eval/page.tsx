@@ -114,11 +114,15 @@ function Transcript({ row }: { row: EvalTaskRow | undefined }) {
   );
 }
 
+// The eval of record (3 runs, Gemini). Other models are comparisons, reachable from the run picker.
+const RECORD_RUN = "2026-09-29-gemini-3.5-flash-lite";
+
 export default async function EvalPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   await connection();
   const params = await searchParams;
   const groups = await listEvalGroups();
-  const base = params.run && groups.some((g) => g.base === params.run) ? params.run : groups[0]?.base;
+  const fallback = groups.find((g) => g.base === RECORD_RUN)?.base ?? groups[0]?.base;
+  const base = params.run && groups.some((g) => g.base === params.run) ? params.run : fallback;
   const group = base ? await getEvalGroup(base) : null;
 
   if (!group) {
@@ -157,6 +161,7 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
               className={`rounded-full border px-3 py-1 ${g.base === group.base ? "border-transparent bg-foreground text-background" : "border-line bg-surface hover:bg-surface-muted"}`}
             >
               {g.model} · {g.reps > 1 ? `${g.reps} runs` : "1 run"}
+              {g.base === RECORD_RUN && " · of record"}
             </a>
           ))}
         </nav>
