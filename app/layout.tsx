@@ -15,8 +15,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://shelfready-ashen.vercel.app"),
   title: "ShelfReady",
   description: "Audit a Shopify catalog for AI shopping agents, fix the gaps with human approval, and open the store to agents over MCP.",
+  openGraph: { siteName: "ShelfReady", type: "website" },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
