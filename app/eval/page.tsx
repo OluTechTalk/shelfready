@@ -64,6 +64,10 @@ function RateBars({ group }: { group: EvalGroup }) {
     { label: "Wrong product", key: "wrongProductRate" as const },
     { label: "Right product, wrong size/color", key: "wrongVariantRate" as const },
     { label: "Gave up — no cart", key: "noCartRate" as const },
+    // Only when a run has them (e.g. a tool call the provider rejected), so every task is accounted for.
+    ...(group.reps.some((r) => r.before.summary.errorRate > 0 || r.after.summary.errorRate > 0)
+      ? [{ label: "Error — invalid tool call or failed request", key: "errorRate" as const }]
+      : []),
   ];
   return (
     <div className="grid gap-5">
@@ -220,9 +224,9 @@ export default async function EvalPage({ searchParams }: { searchParams: Promise
           <div key={m.key} className="rounded-xl border border-line bg-surface p-5">
             <p className="text-sm text-muted">{m.label}</p>
             <p className="mt-1 text-2xl font-semibold tabular-nums">
-              <span className="text-muted">{across(group, "before", m.key).mean.toLocaleString("en-US")}</span>
+              <span className="text-muted">{across(group, "before", m.key).mean.toLocaleString("en-US", { maximumFractionDigits: m.key === "avgTokens" ? 0 : 1 })}</span>
               <span aria-hidden className="mx-2 text-lg text-muted">→</span>
-              {across(group, "after", m.key).mean.toLocaleString("en-US")}
+              {across(group, "after", m.key).mean.toLocaleString("en-US", { maximumFractionDigits: m.key === "avgTokens" ? 0 : 1 })}
             </p>
           </div>
         ))}

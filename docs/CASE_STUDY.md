@@ -45,9 +45,20 @@ Claude, connected as a custom connector, was asked for "waterproof hiking boots,
 | Wrong product bought | 0% | 0% |
 | Tokens per task | 9,773 | **9,370** |
 
+**A second model.** The same 60 tasks, one run each, on Groq-hosted gpt-oss-120b (free tier, run a few evenings at a time):
+
+| | Before | After |
+|---|---|---|
+| Right product in the cart | 86.7% | **88.3%** |
+| Gave up without a cart | 10% | **1.7%** |
+| Wrong product bought | 3.3% | 1.7% |
+| Invalid tool call (rejected by the provider) | 0% | 8.3% |
+
+The weaker agent is where the fixes show: on the messy catalog it gave up on 6 tasks, on the fixed catalog on 1. But it also made a mistake Gemini never did — on 5 tasks it asked search for 20 results when the tool allows 10, and Groq rejects the call outright. I counted those as failures rather than loosening the tool mid-comparison. (Caveats: one run, not three; and the search sort option shipped after 34 of its 60 "before" tasks had run.)
+
 ## What surprised me
 
-1. **The tools mattered more than the data.** The first fair run scored 95% → 92.5% — *after* worse than before. The failures were the search tool, on both catalogs: it dropped numbers ("6 person tent" returned the cheapest tents) and silently returned nothing for invented attribute names. Keeping numbers and returning the valid names instead of zero results moved both catalogs to 98–100%. Agent-readiness is the data **and** the interface agents use.
+1. **The tools mattered more than the data.** The first fair run scored 95% → 92.5% — *after* worse than before. The failures were the search tool, on both catalogs: it dropped numbers ("6 person tent" returned the cheapest tents) and silently returned nothing for invented attribute names. Keeping numbers and returning the valid names instead of zero results moved both catalogs to 98–100%. Agent-readiness is the data **and** the interface agents use. The second model made the same point from the other side: 5 of its 60 "after" tasks failed on a tool limit, not on the catalog.
 2. **A capable agent absorbs most mess.** With good tools it never bought a wrong product in 360 sessions. What it can't get past is **missing facts** — every remaining failure traced to one, including a product whose weight is still a merchant gap, where the agent declined rather than guess.
 3. **Grounding has holes you only find by auditing the output.** A live review spotted "Lynx **30f** Synthetic Sleeping Bag". Root cause: the fixer treated the URL handle (`lynx-30f-…`) as product text, so a bad attribute was "quoted" from the slug and then made the bad title look grounded. I added a spec check (numbers *and* units must match the product's own text; the handle is never evidence) and an audit of every fix already applied — 3 of 50 were wrong and were corrected through the queue.
 4. **The eval harness needs as much scrutiny as the system.** An early "before" score was unfairly low because stand-in product ids exceeded the tools' 80-character limit — the agent found the right item but couldn't cart it. Found from a crash, fixed, and the run discarded.
@@ -68,4 +79,4 @@ All model calls are logged with tokens and cost. The free tiers carried the buil
 - **Range filters in search** — a recorded demo answer called 20°F bags the warmest because search returned top matches, not extremes; a `sort` option (cheapest, lightest, warmest, largest) now fixes superlatives. Numeric ranges ("under 1 kg", "at least 30 L") are next.
 - **Single-answer eval tasks** — many tasks had 2–4 correct products, so an agent could route around one damaged listing; sharper tasks would separate the catalogs more.
 - **A merchant input step** for the 15 gaps the fixer refused to invent.
-- **A second model in the eval** — Groq gpt-oss-120b is running on the free tier and will be added to `/eval`.
+- **Forgiving tool inputs** — clamp an over-large `limit` instead of rejecting it, so a slightly-off agent still gets an answer. Agent-readiness includes the tool's error tolerance, not just the data.

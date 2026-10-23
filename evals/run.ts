@@ -13,7 +13,7 @@
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { generateText, isStepCount, tool } from "ai";
 import { z } from "zod";
 import { MODELS, languageModel, type ModelSpec } from "../lib/ai/models";
@@ -269,9 +269,12 @@ async function main() {
         .from(schema.evalRuns)
         .where(and(eq(schema.evalRuns.label, runLabel), eq(schema.evalRuns.catalog, catalog)));
       run ??= (await db.insert(schema.evalRuns).values({ label: runLabel, catalog, model: model.id, summary: {} }).returning({ id: schema.evalRuns.id }))[0];
-      await db.delete(schema.evalResults).where(and(eq(schema.evalResults.runId, run.id), eq(schema.evalResults.outcome, "error")));
+      // --summary-only: rebuild the summary and results file from saved rows; run nothing, keep error rows.
+      const summaryOnly = process.argv.includes("--summary-only");
+      // Only the tasks in this run are retried (so --tasks leaves other error rows alone).
+      if (!summaryOnly) await db.delete(schema.evalResults).where(and(eq(schema.evalResults.runId, run.id), eq(schema.evalResults.outcome, "error"), inArray(schema.evalResults.taskId, tasks.map((t) => t.id))));
       const done = new Set((await db.select({ taskId: schema.evalResults.taskId }).from(schema.evalResults).where(eq(schema.evalResults.runId, run.id))).map((r) => r.taskId));
-      const todo = tasks.filter((t) => !done.has(t.id));
+      const todo = summaryOnly ? [] : tasks.filter((t) => !done.has(t.id));
       console.log(`\n${runLabel} · ${catalog} catalog · ${model.id} · ${todo.length} to run${done.size ? ` (${done.size} already done)` : ""}`);
 
       const ranNow: TaskResult[] = [];

@@ -2,6 +2,13 @@
 
 Newest first. Each entry feeds the "Key decisions" section of the case study.
 
+## 2026-10-23 — Groq's rejected tool calls count as failures
+- Context: on 5 of 60 "after" tasks, gpt-oss-120b on Groq called `search_products` with `limit: 20` (max 10). Groq validates tool calls server-side and rejects the request, so the task ends with no answer — the same 5 tasks on every retry.
+- Options: count them as failures and report as-is; make the tool clamp `limit` to 10 and rerun those tasks
+- Chose (Olu): count as failures, tools unchanged
+- Why: a shopper would have got nothing, so it is a real failure; changing the tool after Gemini's runs and partway through Groq's would weaken the before/after comparison. The lesson (tolerant tool inputs) goes in the case study as a next step instead.
+- Also: one Groq task (T56) failed on a dropped connection and was retried — infrastructure, not agent behavior. The runner gained `--summary-only` (rebuild a summary without running tasks) and `--tasks` now retries only the listed tasks' errors.
+
 ## 2026-10-17 — Search sort ranks missing values last; Groq eval made observable
 - Options (sort): treat a missing value as 0 / infinity; drop products without it; rank them last
 - Chose: rank them last (still listed, never first)

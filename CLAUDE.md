@@ -54,7 +54,7 @@ Detailed scope lives in @docs/SPEC.md. Scoring rules live in @docs/RUBRIC.md (v0
 - `npm run propose` — fill the review queue from the latest audit run (never writes to Shopify)
 - `npm run fix -- list | approve <id…> | reject <id…> | retry <id…> | apply [--dry-run]` — review queue CLI; `apply` writes only approved fixes
 - `npm run eval:tasks` — regenerate `evals/tasks.json` (60 tasks + ground truth, deterministic)
-- `npm run eval -- [--catalog before|after|both] [--model default|backup] [--repeat N] [--label name] [--tasks T01,T02]` — agent shops the task set on the messy fixture (before) and the fixed catalog (after); resumable by label; results in `eval_runs` / `eval_results` and `evals/results/`
+- `npm run eval -- [--catalog before|after|both] [--model default|backup] [--repeat N] [--label name] [--tasks T01,T02] [--summary-only]` — agent shops the task set on the messy fixture (before) and the fixed catalog (after); resumable by label; results in `eval_runs` / `eval_results` and `evals/results/`
 
 ## Rules
 - Work in small slices. Propose a plan before writing code, and wait for my OK on anything touching more than 3 files.
