@@ -6,10 +6,10 @@ Detailed scope lives in @docs/SPEC.md. Scoring rules live in @docs/RUBRIC.md (v0
 
 ## Current status
 <!-- /end-session updates this block. Keep it to 5 lines. -->
-- Phase: P6 Ship (mostly done) — live demo, public repo, case study (+ /case-study), README screenshots, launch kit
-- Last session: 08 — public-ready repo, case study, search sort, launch drafts; Loom deferred by Olu
-- Next target: Episode 09 — finish the Groq comparison (nightly 8 PM, VPN off), add it to /eval + case study, close P6
-- Blockers: none. Groq log: evals/logs/groq-summary.log (one line per night). Register task: scripts/register-groq-task.ps1
+- Phase: P6 Ship — COMPLETE. Live demo, public repo, case study (+ /case-study), README screenshots, launch kit, Groq comparison
+- Last session: 09 — Groq gpt-oss-120b comparison finished (60 tasks, both catalogs); nightly task disabled
+- Next target: none required. Optional: link visitors to the store (dev store is password-protected), record the Loom case presentation
+- Blockers: none
 
 ## Stack
 - Next.js (App Router) + TypeScript + Tailwind + shadcn/ui, deployed on Vercel Hobby
