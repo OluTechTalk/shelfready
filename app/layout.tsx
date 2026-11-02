@@ -38,6 +38,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           </div>
         </header>
         {children}
+        <footer className="mt-auto border-t border-line py-6 text-center text-sm text-muted">
+          <a
+            href="https://shelfready-demo-owtutqd5.myshopify.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline underline-offset-4 hover:text-foreground"
+          >
+            Browse the demo store on Shopify
+          </a>
+        </footer>
       </body>
     </html>
   );
